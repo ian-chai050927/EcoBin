@@ -1,0 +1,5 @@
+<div class="d-flex justify-content-between"><div><h2><?= ucfirst(\EcoBin\Services\Security::e($period)) ?> Statistical Report</h2><p class="text-muted">Current <?= $period==='annual'?'year':'month' ?>.</p></div><button class="btn btn-outline-secondary h-50" onclick="window.print()">Print / Save as PDF</button></div>
+<div class="row g-3"><div class="col-md-6"><div class="card p-4"><div class="small-muted">Collection Requests</div><div class="stat"><?= count($collections) ?></div>
+<p>Completed: <?= count(array_filter($collections,fn($x)=>$x->status==='Completed')) ?></p></div></div>
+<div class="col-md-6"><div class="card p-4"><div class="small-muted">Recycling Submissions</div><div class="stat"><?= count($recycling) ?></div>
+<p>Approved: <?= count(array_filter($recycling,fn($x)=>$x->status==='Approved')) ?></p></div></div></div>
