@@ -1,0 +1,31 @@
+<?php
+
+namespace EcoBin\States\Collection;
+
+class CompletedState implements CollectionState
+{
+    public function getName(): string
+    {
+        return 'Completed';
+    }
+
+    public function canAssign(): bool
+    {
+        return false;
+    }
+
+    public function canStart(): bool
+    {
+        return false;
+    }
+
+    public function canComplete(): bool
+    {
+        return false;
+    }
+
+    public function canCancel(): bool
+    {
+        return false;
+    }
+}

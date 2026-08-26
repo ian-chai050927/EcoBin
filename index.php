@@ -42,12 +42,33 @@ switch ($page) {
     case 'user-create': $auth->createUser(); break;
     case 'user-update': $auth->updateUser(); break;
 
-    case 'module2': $waste->resident(); break;
-    case 'module2-submit': $waste->submit(); break;
-    case 'module2-admin': $waste->admin(); break;
-    case 'module2-assign': $waste->assign(); break;
-    case 'module2-staff': $waste->staff(); break;
-    case 'module2-status': $waste->status(); break;
+    case 'module2':
+    $waste->resident();
+    break;
+
+case 'module2-submit':
+    $waste->submit();
+    break;
+
+case 'module2-cancel':
+    $waste->cancel();
+    break;
+
+case 'module2-admin':
+    $waste->admin();
+    break;
+
+case 'module2-assign':
+    $waste->assign();
+    break;
+
+case 'module2-staff':
+    $waste->staff();
+    break;
+
+case 'module2-status':
+    $waste->status();
+    break;
 
     case 'module3': $recycling->resident(); break;
     case 'module3-submit': $recycling->submit(); break;
