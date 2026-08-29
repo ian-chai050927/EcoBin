@@ -5,6 +5,7 @@ use Doctrine\ORM\EntityManagerInterface;
 use EcoBin\Entities\User;
 use EcoBin\Services\Security;
 use EcoBin\Services\Mailer;
+use EcoBin\Factories\UserFactory;
 
 class AuthController
 {
@@ -54,7 +55,7 @@ class AuthController
         view('auth/login', ['title' => 'Login']);
     }
 
-    public function register(): void
+  public function register(): void
     {
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             Security::verifyCsrf();
@@ -75,12 +76,7 @@ class AuthController
                 exit;
             }
 
-            $u = new User();
-            $u->name = $name;
-            $u->email = $email;
-            $u->passwordHash = password_hash($password, PASSWORD_DEFAULT);
-            $u->role = 'Resident';
-            $u->verificationToken = bin2hex(random_bytes(24));
+            $u = UserFactory::createUser('Resident', $name, $email, $password);
 
             $this->em->persist($u);
             $this->em->flush();
@@ -89,11 +85,29 @@ class AuthController
                 . '/index.php?page=verify&token='
                 . urlencode($u->verificationToken);
 
-            (new Mailer($this->app['mail']))->send(
-                $u->email,
-                'Verify your EcoBin email',
-                'Verification link: ' . $verifyUrl
-            );
+            // --- SERVICE CONSUMPTION (IFA COMPLIANT) ---
+            // Prepare the IFA-compliant request payload
+            $payload = json_encode([
+                'requestID' => uniqid('req_'),
+                'timeStamp' => (new \DateTime())->format('Y-m-d H:i:s'),
+                'action'    => 'sendEmail',
+                'email'     => $u->email,
+                'subject'   => 'Verify your EcoBin email',
+                'message'   => 'Verification link: ' . $verifyUrl
+            ]);
+
+            // Initialize cURL to consume Module 5's Web Service
+            $ch = curl_init($this->app['base_url'] . '/api.php?service=notification');
+            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+            curl_setopt($ch, CURLOPT_POST, true);
+            curl_setopt($ch, CURLOPT_POSTFIELDS, $payload);
+            curl_setopt($ch, CURLOPT_HTTPHEADER, [
+                'Content-Type: application/json',
+                'Content-Length: ' . strlen($payload)
+            ]);
+
+            curl_exec($ch);
+            curl_close($ch);
 
             $this->dispatcher->dispatch('auth.register', [
                 'entity' => 'User',
@@ -102,7 +116,7 @@ class AuthController
 
             Security::flash(
                 'success',
-                'Registration successful. For local demo, verification email is written to storage/mail.log.'
+                'Registration successful. Please check your email to verify your account.'
             );
 
             header('Location: index.php?page=login');
@@ -152,14 +166,44 @@ class AuthController
                     . '/index.php?page=reset&token='
                     . urlencode($user->resetToken);
 
-                (new Mailer($this->app['mail']))->send(
-                    $user->email,
-                    'EcoBin password reset',
-                    'Reset link: ' . $url
-                );
+                // --- SERVICE CONSUMPTION (IFA COMPLIANT) ---
+                // Prepare the IFA-compliant request payload
+                $payload = json_encode([
+                    'requestID' => uniqid('req_'),
+                    'timeStamp' => (new \DateTime())->format('Y-m-d H:i:s'),
+                    'action'    => 'sendEmail',
+                    'email'     => $user->email,
+                    'subject'   => 'EcoBin password reset',
+                    'message'   => 'Reset link: ' . $url
+                ]);
+
+                // Initialize cURL to consume Module 5's Web Service
+                $ch = curl_init($this->app['base_url'] . '/api.php?service=notification');
+                curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+                curl_setopt($ch, CURLOPT_POST, true);
+                curl_setopt($ch, CURLOPT_POSTFIELDS, $payload);
+                curl_setopt($ch, CURLOPT_HTTPHEADER, [
+                    'Content-Type: application/json',
+                    'Content-Length: ' . strlen($payload)
+                ]);
+
+                // Execute and capture the response
+                $apiResponse = curl_exec($ch);
+                curl_close($ch);
+
+                $responseData = json_decode($apiResponse, true);
+
+                // IFA Response format check
+                if (isset($responseData['status']) && $responseData['status'] === 'S') {
+                    Security::flash('success', 'If the email exists, a reset message has been generated.');
+                } else {
+                    Security::flash('error', 'Notification service is currently unavailable.');
+                }
+            } else {
+                // Prevent email enumeration attacks by showing success even if email is not found
+                Security::flash('success', 'If the email exists, a reset message has been generated.');
             }
 
-            Security::flash('success', 'If the email exists, a reset message has been generated.');
             header('Location: index.php?page=login');
             exit;
         }
@@ -320,13 +364,8 @@ class AuthController
             exit;
         }
 
-        $u = new User();
-        $u->name = $name;
-        $u->email = $email;
-        $u->passwordHash = password_hash($password, PASSWORD_DEFAULT);
-        $u->role = $role;
-        $u->status = 'Active';
-        $u->emailVerifiedAt = new \DateTime();
+        
+        $u = UserFactory::createUser($role, $name, $email, $password);
 
         $this->em->persist($u);
         $this->em->flush();
@@ -409,4 +448,34 @@ class AuthController
     {
         $this->updateUser();
     }
+
+    public function apiUserStatus(): void
+    {
+        header('Content-Type: application/json');
+        
+        // IFA Mandatory Request Requirement: Tracking ID
+        $requestID = $_GET['requestID'] ?? uniqid();
+        $email = $_GET['email'] ?? '';
+
+        $user = $this->em->getRepository(User::class)->findOneBy(['email' => $email]);
+
+        // IFA Mandatory Response Requirement: Status and Timestamp
+        $response = [
+            'requestID' => $requestID,
+            'timeStamp' => (new \DateTime())->format('Y-m-d H:i:s'),
+            'status'    => $user ? 'S' : 'F',
+        ];
+
+        if ($user) {
+            $response['userDetails'] = [
+                'name'   => $user->name,
+                'role'   => $user->role,
+                'status' => $user->status
+            ];
+        }
+
+        echo json_encode($response);
+        exit;
+    }
+
 }
