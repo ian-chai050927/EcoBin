@@ -7,6 +7,10 @@ use EcoBin\Controllers\RecyclingController;
 use EcoBin\Controllers\DashboardController;
 use EcoBin\Controllers\SystemController;
 use EcoBin\Services\Security;
+use EcoBin\Services\NotificationService;
+use EcoBin\Services\AnnouncementService;
+use EcoBin\Services\SystemConfigService;
+use EcoBin\Services\AuditLogService;
 use EcoBin\Entities\Announcement;
 
 $container = require __DIR__ . '/bootstrap.php';
@@ -25,7 +29,20 @@ $auth = new AuthController($em, $app, $dispatcher);
 $waste = new WasteController($em, $app, $dispatcher);
 $recycling = new RecyclingController($em, $dispatcher);
 $dashboard = new DashboardController($em);
-$system = new SystemController($em, $dispatcher);
+
+
+$notificationService = new NotificationService($em);
+$announcementService = new AnnouncementService($em);
+$configService = new SystemConfigService($em);
+$auditLogService = new AuditLogService($em);
+
+$system = new SystemController(
+    $notificationService,
+    $announcementService,
+    $configService,
+    $auditLogService,
+    $dispatcher
+);
 
 $page = $_GET['page'] ?? 'home';
 
@@ -43,32 +60,32 @@ switch ($page) {
     case 'user-update': $auth->updateUser(); break;
 
     case 'module2':
-    $waste->resident();
-    break;
+        $waste->resident();
+        break;
 
-case 'module2-submit':
-    $waste->submit();
-    break;
+    case 'module2-submit':
+        $waste->submit();
+        break;
 
-case 'module2-cancel':
-    $waste->cancel();
-    break;
+    case 'module2-cancel':
+        $waste->cancel();
+        break;
 
-case 'module2-admin':
-    $waste->admin();
-    break;
+    case 'module2-admin':
+        $waste->admin();
+        break;
 
-case 'module2-assign':
-    $waste->assign();
-    break;
+    case 'module2-assign':
+        $waste->assign();
+        break;
 
-case 'module2-staff':
-    $waste->staff();
-    break;
+    case 'module2-staff':
+        $waste->staff();
+        break;
 
-case 'module2-status':
-    $waste->status();
-    break;
+    case 'module2-status':
+        $waste->status();
+        break;
 
     case 'module3': $recycling->resident(); break;
     case 'module3-submit': $recycling->submit(); break;

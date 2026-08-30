@@ -1,11 +1,129 @@
 <h2>System Administration</h2>
-<p class="text-muted">No user CRUD/status duplication. Module 1 owns accounts; Module 5 focuses on notifications, announcements, configuration and logs.</p>
-<div class="row g-4"><div class="col-lg-6"><div class="card p-4"><h4>Create Announcement</h4><form method="post" action="index.php?page=module5-announcement">
-<input type="hidden" name="csrf_token" value="<?= \EcoBin\Services\Security::csrfToken() ?>">
-<input class="form-control mb-2" name="title" maxlength="150" placeholder="Title" required><textarea class="form-control mb-2" name="message" maxlength="4000" placeholder="Announcement" required></textarea><button class="btn btn-success">Publish</button></form></div></div>
-<div class="col-lg-6"><div class="card p-4"><h4>System Configuration</h4><form method="post" action="index.php?page=module5-config">
-<input type="hidden" name="csrf_token" value="<?= \EcoBin\Services\Security::csrfToken() ?>">
-<input class="form-control mb-2" name="key" placeholder="config.key" required><input class="form-control mb-2" name="value" placeholder="value" required><button class="btn btn-success">Save Config</button></form></div></div></div>
-<div class="row g-4 mt-1"><div class="col-lg-6"><div class="card p-3"><h4>Audit Logs</h4><div class="table-responsive" style="max-height:430px"><table class="table table-sm"><thead><tr><th>Time</th><th>User</th><th>Action</th><th>Entity</th></tr></thead><tbody>
-<?php foreach($audits as $a): ?><tr><td><?= $a->createdAt->format('m-d H:i') ?></td><td><?= $a->userId ?? '-' ?></td><td><?= \EcoBin\Services\Security::e($a->action) ?></td><td><?= \EcoBin\Services\Security::e($a->entity) ?> #<?= $a->entityId ?? '' ?></td></tr><?php endforeach; ?></tbody></table></div></div></div>
-<div class="col-lg-6"><div class="card p-3"><h4>Activity Logs</h4><div style="max-height:430px;overflow:auto"><?php foreach($activities as $a): ?><div class="border-bottom py-2"><?= $a->createdAt->format('Y-m-d H:i:s') ?> · User <?= $a->userId ?? '-' ?> · <?= \EcoBin\Services\Security::e($a->activity) ?></div><?php endforeach; ?></div></div></div></div>
+<p class="text-muted">
+    No user CRUD/status duplication. Module 1 owns accounts; Module 5 focuses on
+    notifications, announcements, configuration and logs.
+</p>
+
+<div class="row g-4">
+
+    <!-- Create Announcement -->
+    <div class="col-lg-6">
+        <div class="card p-4">
+            <h4>Create Announcement</h4>
+
+            <form method="post" action="index.php?page=module5-announcement">
+                <input type="hidden" name="csrf_token"
+                       value="<?= \EcoBin\Services\Security::csrfToken() ?>">
+
+                <input class="form-control mb-2" name="title" maxlength="150"
+                       placeholder="Title" required>
+
+                <textarea class="form-control mb-2" name="message" maxlength="4000"
+                          placeholder="Announcement" required></textarea>
+
+                <button class="btn btn-success">Publish</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- System Configuration -->
+    <div class="col-lg-6">
+        <div class="card p-4">
+            <h4>System Configuration</h4>
+
+            <form method="post" action="index.php?page=module5-config">
+                <input type="hidden" name="csrf_token"
+                       value="<?= \EcoBin\Services\Security::csrfToken() ?>">
+
+                <input class="form-control mb-2" name="key"
+                       placeholder="config.key" required>
+
+                <input class="form-control mb-2" name="value"
+                       placeholder="value" required>
+
+                <button class="btn btn-success">Save Config</button>
+            </form>
+
+            <div class="mt-3">
+                <h5>Current Configuration</h5>
+
+                <div class="table-responsive">
+                    <table class="table table-sm">
+                        <thead>
+                        <tr>
+                            <th>Key</th>
+                            <th>Value</th>
+                            <th>Updated</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <?php foreach ($configs as $c): ?>
+                            <tr>
+                                <td><code><?= \EcoBin\Services\Security::e($c->key) ?></code></td>
+                                <td><?= \EcoBin\Services\Security::e($c->value) ?></td>
+                                <td><?= $c->updatedAt->format('Y-m-d H:i') ?></td>
+                            </tr>
+                        <?php endforeach; ?>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+</div>
+
+<div class="row g-4 mt-1">
+
+    <!-- Audit Logs -->
+    <div class="col-lg-6">
+        <div class="card p-3">
+            <h4>Audit Logs</h4>
+
+            <div class="table-responsive" style="max-height:430px">
+                <table class="table table-sm">
+                    <thead>
+                    <tr>
+                        <th>Time</th>
+                        <th>User</th>
+                        <th>Action</th>
+                        <th>Entity</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <?php foreach ($audits as $a): ?>
+                        <tr>
+                            <td><?= $a->createdAt->format('m-d H:i') ?></td>
+                            <td><?= $a->userId ?? '-' ?></td>
+                            <td><?= \EcoBin\Services\Security::e($a->action) ?></td>
+                            <td>
+                                <?= \EcoBin\Services\Security::e($a->entity) ?>
+                                #<?= $a->entityId ?? '' ?>
+                            </td>
+                        </tr>
+                    <?php endforeach; ?>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Activity Logs -->
+    <div class="col-lg-6">
+        <div class="card p-3">
+            <h4>Activity Logs</h4>
+
+            <div style="max-height:430px;overflow:auto">
+                <?php foreach ($activities as $a): ?>
+                    <div class="border-bottom py-2">
+                        <?= $a->createdAt->format('Y-m-d H:i:s') ?>
+                        · User <?= $a->userId ?? '-' ?>
+                        · <?= \EcoBin\Services\Security::e($a->activity) ?>
+                    </div>
+                <?php endforeach; ?>
+            </div>
+        </div>
+    </div>
+
+</div>
