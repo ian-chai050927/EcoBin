@@ -16,12 +16,28 @@ class RecyclingController
     public function resident(): void
     {
         Security::requireRole(['Resident']);
+        $uid = (int)$_SESSION['user_id'];
         $centers = $this->em->getRepository(RecyclingCenter::class)->findBy([], ['name'=>'ASC']);
-        $subs = $this->em->getRepository(RecyclingSubmission::class)->findBy(['residentId'=>(int)$_SESSION['user_id']], ['id'=>'DESC']);
-        $appts = $this->em->getRepository(RecyclingAppointment::class)->findBy(['residentId'=>(int)$_SESSION['user_id']], ['id'=>'DESC']);
-        $rewards = $this->em->getRepository(RewardTransaction::class)->findBy(['userId'=>(int)$_SESSION['user_id']], ['id'=>'DESC']);
+        $subs = $this->em->getRepository(RecyclingSubmission::class)->findBy(['residentId'=>$uid], ['id'=>'DESC']);
+        $appts = $this->em->getRepository(RecyclingAppointment::class)->findBy(['residentId'=>$uid], ['id'=>'DESC']);
+        $rewards = $this->em->getRepository(RewardTransaction::class)->findBy(['userId'=>$uid], ['id'=>'DESC']);
         $balance = array_sum(array_map(fn($r)=>$r->points, $rewards));
-        view('module3/resident', compact('centers','subs','appts','rewards','balance') + ['title'=>'Recycling & Rewards']);
+
+        // Calculate total weight and badges
+        $totalWeight = array_sum(array_map(fn($s) => $s->status === 'Approved' ? (float)$s->weightKg : 0, $subs));
+        $badges = [];
+        if (count(array_filter($subs, fn($s) => $s->status === 'Approved')) >= 1) $badges[] = 'Eco Starter';
+        if ($totalWeight >= 10) $badges[] = 'Green Warrior';
+        if ($totalWeight >= 50) $badges[] = 'Recycling Master';
+
+        // Fetch Leaderboard (top 10 residents by points earned)
+        $conn = $this->em->getConnection();
+        $sql = "SELECT u.name, SUM(r.points) as total_earned FROM reward_transactions r JOIN users u ON r.user_id = u.id WHERE r.type = 'Earn' GROUP BY u.id ORDER BY total_earned DESC LIMIT 10";
+        $stmt = $conn->prepare($sql);
+        $result = $stmt->executeQuery();
+        $leaderboard = $result->fetchAllAssociative();
+
+        view('module3/resident', compact('centers','subs','appts','rewards','balance','totalWeight','badges','leaderboard') + ['title'=>'Recycling & Rewards']);
     }
 
     public function submit(): void
@@ -46,6 +62,15 @@ class RecyclingController
     public function appointment(): void
     {
         Security::requireRole(['Resident']); Security::verifyCsrf();
+        
+        $limiter = new \EcoBin\Services\RateLimiter($this->em);
+        try {
+            $limiter->checkAndLog((int)$_SESSION['user_id'], 'module3.appointment', 3, 3600);
+        } catch (\RuntimeException $e) {
+            Security::flash('danger', $e->getMessage());
+            header('Location: index.php?page=module3'); exit;
+        }
+
         $center = $this->em->find(RecyclingCenter::class, (int)($_POST['center_id'] ?? 0));
         if (!$center || $center->availability !== 'Open') exit('Center unavailable.');
 
@@ -108,7 +133,8 @@ class RecyclingController
 
         $s->status = $status;
         if ($status === 'Approved' && $s->points === 0) {
-            $s->points = max(1, (int)round((float)$s->weightKg * 10));
+            $strategy = \EcoBin\Services\RewardStrategy\RewardContext::getStrategy($s->material);
+            $s->points = $strategy->calculate((float)$s->weightKg);
             $r = new RewardTransaction();
             $r->userId = $s->residentId;
             $r->points = $s->points;
@@ -145,5 +171,58 @@ class RecyclingController
         ]);
         Security::flash('success','Appointment updated.');
         header('Location: index.php?page=module3-operator'); exit;
+    }
+
+    public function redeem(): void
+    {
+        Security::requireRole(['Resident']); Security::verifyCsrf();
+        $uid = (int)$_SESSION['user_id'];
+        
+        $limiter = new \EcoBin\Services\RateLimiter($this->em);
+        try {
+            $limiter->checkAndLog($uid, 'module3.redeem', 5, 3600); // Max 5 redemptions per hour
+        } catch (\RuntimeException $e) {
+            Security::flash('danger', $e->getMessage());
+            header('Location: index.php?page=module3'); exit;
+        }
+
+        $pointsToRedeem = (int)($_POST['points'] ?? 0);
+        $rewardName = trim($_POST['reward_name'] ?? 'Reward');
+
+        if ($pointsToRedeem <= 0) exit('Invalid points.');
+
+        $this->em->beginTransaction();
+        try {
+            $conn = $this->em->getConnection();
+            // Calculate current balance with pessimistic write lock (FOR UPDATE)
+            $sql = "SELECT SUM(points) FROM reward_transactions WHERE user_id = :uid FOR UPDATE";
+            $stmt = $conn->prepare($sql);
+            $result = $stmt->executeQuery(['uid' => $uid]);
+            $balance = (int)$result->fetchOne();
+
+            if ($balance < $pointsToRedeem) {
+                throw new \Exception('Insufficient points. Balance: ' . $balance);
+            }
+
+            // Deduct points
+            $r = new RewardTransaction();
+            $r->userId = $uid;
+            $r->points = -$pointsToRedeem;
+            $r->type = 'Redeem';
+            $r->description = 'Redeemed: ' . mb_substr($rewardName, 0, 200);
+            $this->em->persist($r);
+            $this->em->flush();
+            $this->em->commit();
+
+            if (isset($this->dispatcher)) {
+                $this->dispatcher->dispatch('reward.redeemed', ['user_id' => $uid, 'points' => $pointsToRedeem]);
+            }
+            Security::flash('success', 'Reward redeemed successfully!');
+        } catch (\Exception $e) {
+            $this->em->rollback();
+            Security::flash('danger', $e->getMessage());
+        }
+
+        header('Location: index.php?page=module3'); exit;
     }
 }

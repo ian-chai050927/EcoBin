@@ -19,7 +19,7 @@ class RecyclingSubmission
     #[ORM\Column(length: 80)]
     public string $material;
 
-    #[ORM\Column(type: 'decimal', precision: 8, scale: 2)]
+    #[ORM\Column(name: 'weight_kg', type: 'decimal', precision: 8, scale: 2)]
     public string $weightKg;
 
     #[ORM\Column(type: 'integer')]

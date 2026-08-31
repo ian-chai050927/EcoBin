@@ -19,7 +19,7 @@ class RecyclingCenter
     #[ORM\Column(length: 500)]
     public string $address;
 
-    #[ORM\Column(length: 255)]
+    #[ORM\Column(name: 'accepted_materials', length: 255)]
     public string $acceptedMaterials;
 
     #[ORM\Column(length: 30)]

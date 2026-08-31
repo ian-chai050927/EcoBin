@@ -94,6 +94,7 @@ switch ($page) {
     case 'module3-center-save': $recycling->centerSave(); break;
     case 'module3-review-submission': $recycling->reviewSubmission(); break;
     case 'module3-review-appointment': $recycling->reviewAppointment(); break;
+    case 'module3-redeem': $recycling->redeem(); break;
 
     case 'module4': $dashboard->index(); break;
     case 'module4-report': $dashboard->report(); break;
