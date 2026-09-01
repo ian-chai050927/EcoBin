@@ -3,9 +3,10 @@ namespace EcoBin\Services\RewardStrategy;
 
 class DefaultRewardStrategy implements RewardCalculatorInterface
 {
-    // Default multiplier
+    public function __construct(private int $pointsPerKg = 5) {}
+
     public function calculate(float $weightKg): int
     {
-        return max(1, (int)round($weightKg * 5));
+        return max(1, (int)round($weightKg * $this->pointsPerKg));
     }
 }

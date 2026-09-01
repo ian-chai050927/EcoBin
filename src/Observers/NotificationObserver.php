@@ -17,6 +17,9 @@ class NotificationObserver implements EventObserver
             'collection.completed' => ['Collection Completed', 'Your waste collection has been completed.', 'Collection'],
             'recycling.approved' => ['Recycling Approved', 'Your recycling submission was approved and points were awarded.', 'Reward'],
             'appointment.updated' => ['Appointment Updated', 'Your recycling appointment status has changed.', 'Recycling'],
+            'reward.redeemed' => ['Reward Redeemed', 'Your reward redemption has been processed.', 'Reward'],
+            'collection.reminder' => ['Collection Reminder', 'Your waste collection is coming up soon.', 'Reminder'],
+            'appointment.reminder' => ['Appointment Reminder', 'Your recycling appointment is coming up soon.', 'Reminder'],
         ];
 
         if (!isset($map[$event]) || empty($data['user_id'])) return;

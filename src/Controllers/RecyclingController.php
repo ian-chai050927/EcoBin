@@ -133,7 +133,9 @@ class RecyclingController
 
         $s->status = $status;
         if ($status === 'Approved' && $s->points === 0) {
-            $strategy = \EcoBin\Services\RewardStrategy\RewardContext::getStrategy($s->material);
+            $configService = new \EcoBin\Services\SystemConfigService($this->em);
+            $defaultRate = (int)($configService->get('recycling.points_per_kg') ?? 5);
+            $strategy = \EcoBin\Services\RewardStrategy\RewardContext::getStrategy($s->material, $defaultRate);
             $s->points = $strategy->calculate((float)$s->weightKg);
             $r = new RewardTransaction();
             $r->userId = $s->residentId;

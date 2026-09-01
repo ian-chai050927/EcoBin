@@ -3,10 +3,10 @@ namespace EcoBin\Services\RewardStrategy;
 
 class RewardContext
 {
-    public static function getStrategy(string $material): RewardCalculatorInterface
+    public static function getStrategy(string $material, ?int $defaultPointsPerKg = null): RewardCalculatorInterface
     {
         $materialLower = strtolower(trim($material));
-        
+
         if (str_contains($materialLower, 'plastic')) {
             return new PlasticRewardStrategy();
         }
@@ -16,7 +16,9 @@ class RewardContext
         if (str_contains($materialLower, 'paper')) {
             return new PaperRewardStrategy();
         }
-        
-        return new DefaultRewardStrategy();
+
+        return $defaultPointsPerKg !== null
+            ? new DefaultRewardStrategy($defaultPointsPerKg)
+            : new DefaultRewardStrategy();
     }
 }
