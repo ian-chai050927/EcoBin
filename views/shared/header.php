@@ -158,10 +158,7 @@ Report Waste
 </a>
 
 
-<a
-href="index.php?page=my-collections"
-class="eco-nav-link
-<?= navActive('my-collections') ?>">
+<a href="index.php?page=my-collections" class="eco-nav-link <?= navActive('my-collections') ?>">
 
 <i class="bi bi-truck"></i>
 

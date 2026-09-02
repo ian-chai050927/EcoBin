@@ -58,9 +58,10 @@ switch ($page) {
     case 'user-status': $auth->changeStatus(); break;
     case 'user-create': $auth->createUser(); break;
     case 'user-update': $auth->updateUser(); break;
+    case 'my-collections':$waste->myCollections();break;
 
     case 'module2':
-        $waste->resident();
+        $waste->resident(); 
         break;
 
     case 'module2-submit':

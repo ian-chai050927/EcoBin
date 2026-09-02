@@ -597,4 +597,23 @@ $imagePath =
         if (!move_uploaded_file($file['tmp_name'], $dir . $filename)) exit('Unable to save image.');
         return 'uploads/waste/' . $filename;
     }
+    public function myCollections(): void
+    {
+        Security::requireRole(['Resident']);
+        $uid = (int)$_SESSION['user_id'];
+        $reports = $this->em->getRepository(WasteReport::class)->findBy(['residentId' => $uid], ['id' => 'DESC']);
+        $collections = $this->em->getRepository(CollectionRequest::class)->findBy(['residentId' => $uid], ['id' => 'DESC']);
+
+        // Keyed by id so the view can look up each collection's report directly.
+        $reportsById = [];
+        foreach ($reports as $r) {
+            $reportsById[$r->id] = $r;
+        }
+
+        view('module2/my-collections', [
+            'title' => 'My Collections',
+            'collections' => $collections,
+            'reports' => $reportsById,
+        ]);
+    }
 }

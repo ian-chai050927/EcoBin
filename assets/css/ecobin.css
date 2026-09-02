@@ -612,4 +612,60 @@ body {
         font-size: 14px;
         font-weight: 600;
     }
+
+    /* Add to Auth.css (shared component styles). */
+
+    .dispatch-count {
+        font-size: 13px;
+        color: var(--eco-muted);
+        font-weight: 600;
+    }
+
+    .waiting-time {
+        font-size: 12px;
+        color: var(--eco-muted);
+    }
+
+    .priority-flag {
+        font-size: 11px;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 0.4px;
+        padding: 4px 9px;
+        border-radius: 999px;
+    }
+
+    .priority-urgent {
+        background: #fde3e3;
+        color: #b3261e;
+    }
+
+    .priority-high {
+        background: #fff4d6;
+        color: #946200;
+    }
+
+    /* Card accent by priority — an urgent job should visually differ
+       from a routine one at a glance, not just via a small text label. */
+    .collection-card-urgent {
+        border-left: 3px solid #dc3545;
+    }
+
+    .collection-card-high {
+        border-left: 3px solid #f0ad4e;
+    }
+
+    .collection-card-today {
+        border-left: 3px solid var(--eco-primary);
+    }
+
+    .today-flag {
+        display: inline-block;
+        font-size: 11px;
+        font-weight: 800;
+        color: var(--eco-primary-dark);
+        text-transform: uppercase;
+        letter-spacing: 0.4px;
+    }
+
 }
