@@ -62,16 +62,12 @@ try {
             break;
 
         case 'dashboard.stats':
-            $collections = $em->getRepository(CollectionRequest::class)->findAll();
-            $recycling = $em->getRepository(RecyclingSubmission::class)->findAll();
-            $waste = $em->getRepository(WasteReport::class)->findAll();
-            $data = [
-                'waste_reports'=>count($waste),
-                'collection_requests'=>count($collections),
-                'collection_completed'=>count(array_filter($collections, fn($x)=>$x->status==='Completed')),
-                'recycling_submissions'=>count($recycling),
-                'recycling_approved'=>count(array_filter($recycling, fn($x)=>$x->status==='Approved')),
-            ];
+            // Use the Facade Pattern to hide complex aggregation logic
+            require_once __DIR__ . '/src/Services/DashboardAnalyticsFacade.php';
+            $facade = new \EcoBin\Services\DashboardAnalyticsFacade($em);
+            
+            // The getDashboardStats method has built-in Date Bounding to mitigate Application-Level DoS
+            $data = $facade->getDashboardStats();
             break;
 
         default:
