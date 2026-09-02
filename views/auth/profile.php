@@ -1,126 +1,81 @@
+<div class="profile-hero">
+    <div class="profile-hero-avatar">
+        <?= strtoupper(substr($user->name, 0, 1)) ?>
+    </div>
+    <div>
+        <p class="profile-hero-name"><?= \EcoBin\Services\Security::e($user->name) ?></p>
+        <div class="profile-hero-role"><?= \EcoBin\Services\Security::e($user->role) ?> · <?= \EcoBin\Services\View::statusBadge($user->status) ?></div>
+    </div>
+</div>
+
 <div class="row g-4">
 
-<div class="col-lg-8">
+    <div class="col-lg-8">
+        <div class="eco-card">
 
-<div class="card p-4">
+            <h2 class="eco-heading">Account Details</h2>
+            <p class="eco-subheading">Manage your personal EcoBin profile.</p>
 
-<h2 class="section-title">
-My Account
-</h2>
+            <form method="post">
 
-<p class="muted">
-Manage your personal EcoBin profile.
-</p>
+                <input type="hidden" name="csrf_token" value="<?= \EcoBin\Services\Security::csrfToken() ?>">
 
-<form method="post">
+                <label class="form-label">Full Name</label>
+                <input class="form-control mb-3" name="name" value="<?= \EcoBin\Services\Security::e($user->name) ?>" required>
 
-<input
-type="hidden"
-name="csrf_token"
-value="<?= \EcoBin\Services\Security::csrfToken() ?>">
+                <label class="form-label">Email Address</label>
+                <input class="form-control mb-3" value="<?= \EcoBin\Services\Security::e($user->email) ?>" disabled>
 
+                <button class="btn-eco">Update Profile</button>
 
-<label class="form-label">
-Full Name
-</label>
+            </form>
 
-<input
-class="form-control mb-3"
-name="name"
-value="<?= \EcoBin\Services\Security::e($user->name) ?>"
-required>
+        </div>
+    </div>
 
 
-<label class="form-label">
-Email Address
-</label>
+    <div class="col-lg-4">
+        <div class="eco-card-flat">
 
-<input
-class="form-control mb-3"
-value="<?= \EcoBin\Services\Security::e($user->email) ?>"
-disabled>
+            <h4>Your Access</h4>
 
+            <?php if ($user->role === 'Resident'): ?>
 
-<label class="form-label">
-Account Role
-</label>
+                <ul>
+                    <li>Submit waste reports</li>
+                    <li>Track own collections</li>
+                    <li>Use recycling & rewards</li>
+                    <li>View own notifications</li>
+                </ul>
 
-<input
-class="form-control mb-3"
-value="<?= \EcoBin\Services\Security::e($user->role) ?>"
-disabled>
+            <?php elseif ($user->role === 'Admin'): ?>
 
+                <ul>
+                    <li>Create and manage users</li>
+                    <li>Change roles/status</li>
+                    <li>Assign collection staff</li>
+                    <li>Access reports and system administration</li>
+                </ul>
 
-<label class="form-label">
-Account Status
-</label>
+            <?php elseif ($user->role === 'Collection Staff'): ?>
 
-<input
-class="form-control mb-3"
-value="<?= \EcoBin\Services\Security::e($user->status) ?>"
-disabled>
+                <ul>
+                    <li>View assigned collection jobs</li>
+                    <li>Update assigned job status</li>
+                    <li>View notifications</li>
+                </ul>
 
+            <?php elseif ($user->role === 'Recycling Center Operator'): ?>
 
-<button class="btn btn-success">
-Update Profile
-</button>
+                <ul>
+                    <li>Maintain recycling centre information</li>
+                    <li>Review recycling submissions</li>
+                    <li>Manage recycling appointments</li>
+                </ul>
 
-</form>
+            <?php endif; ?>
 
-</div>
-</div>
-
-
-<div class="col-lg-4">
-
-<div class="card p-4">
-
-<h4>
-Your Access
-</h4>
-
-<p class="muted">
-Available functions are determined by your role.
-</p>
-
-
-<?php if ($user->role === 'Resident'): ?>
-
-<ul>
-<li>Submit waste reports</li>
-<li>Track own collections</li>
-<li>Use recycling & rewards</li>
-<li>View own notifications</li>
-</ul>
-
-<?php elseif ($user->role === 'Admin'): ?>
-
-<ul>
-<li>Create and manage users</li>
-<li>Change roles/status</li>
-<li>Assign collection staff</li>
-<li>Access reports and system administration</li>
-</ul>
-
-<?php elseif ($user->role === 'Collection Staff'): ?>
-
-<ul>
-<li>View assigned collection jobs</li>
-<li>Update assigned job status</li>
-<li>View notifications</li>
-</ul>
-
-<?php elseif ($user->role === 'Recycling Center Operator'): ?>
-
-<ul>
-<li>Maintain recycling centre information</li>
-<li>Review recycling submissions</li>
-<li>Manage recycling appointments</li>
-</ul>
-
-<?php endif; ?>
-
-</div>
-</div>
+        </div>
+    </div>
 
 </div>

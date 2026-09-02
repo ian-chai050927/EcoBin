@@ -1,11 +1,56 @@
-<div class="row justify-content-center"><div class="col-md-5"><div class="card p-4">
-<h2>Login</h2>
-<form method="post">
-<input type="hidden" name="csrf_token" value="<?= \EcoBin\Services\Security::csrfToken() ?>">
-<label class="form-label">Email</label><input class="form-control mb-3" type="email" name="email" required>
-<label class="form-label">Password</label><input class="form-control mb-3" type="password" name="password" required>
-<button class="btn btn-success w-100">Login</button>
-</form>
-<div class="mt-3"><a href="index.php?page=forgot">Forgot password?</a> · <a href="index.php?page=register">Register</a></div>
-<div class="alert alert-secondary mt-3 small">Demo password for seeded accounts: <strong>Password123!</strong></div>
-</div></div></div>
+<div class="auth-shell">
+
+    <div class="auth-side">
+        <div class="auth-side-brand">
+            <i class="bi bi-recycle"></i> EcoBin
+        </div>
+
+        <div class="auth-side-quote">
+            Every report, every pickup, every kilogram recycled — tracked in one place for your community.
+        </div>
+
+        <div class="auth-side-stat">
+            <div>
+                <div class="auth-side-stat-num">SDG 12</div>
+                <div class="auth-side-stat-label">Responsible Consumption &amp; Production</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="auth-form-panel">
+        <div class="auth-form-box">
+
+            <h2>Welcome back</h2>
+            <p class="eco-subheading">Log in to manage your waste collection and recycling.</p>
+
+            <form method="post">
+                <input type="hidden" name="csrf_token" value="<?= \EcoBin\Services\Security::csrfToken() ?>">
+
+                <div class="auth-field">
+                    <label>Email</label>
+                    <input type="email" name="email" required>
+                </div>
+
+                <div class="auth-field">
+                    <label>Password</label>
+                    <input type="password" name="password" required>
+                    <a href="index.php?page=forgot" class="auth-forgot">Forgot password?</a>
+                </div>
+
+                <button class="btn-auth">
+                    Login <i class="bi bi-arrow-right"></i>
+                </button>
+            </form>
+
+            <div class="auth-links">
+                <a href="index.php?page=register">Register</a>
+            </div>
+
+            <div class="auth-note">
+                Demo password for seeded accounts: <strong>Password123!</strong>
+            </div>
+
+        </div>
+    </div>
+
+</div>
