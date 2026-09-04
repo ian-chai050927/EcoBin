@@ -40,57 +40,57 @@ class WasteController
         $address = trim($_POST['address'] ?? '');
         $preferred = $_POST['preferred_date'] ?? '';
         $priority =
-    $_POST['priority']
-    ?? 'Normal';
+            $_POST['priority']
+            ?? 'Normal';
 
 
-$wasteSize =
-    $_POST['waste_size']
-    ?? 'Medium';
+        $wasteSize =
+            $_POST['waste_size']
+            ?? 'Medium';
 
 
-$allowedPriorities = [
-    'Low',
-    'Normal',
-    'High',
-    'Urgent'
-];
+        $allowedPriorities = [
+            'Low',
+            'Normal',
+            'High',
+            'Urgent'
+        ];
 
 
-$allowedWasteSizes = [
-    'Small',
-    'Medium',
-    'Large',
-    'Extra Large'
-];
+        $allowedWasteSizes = [
+            'Small',
+            'Medium',
+            'Large',
+            'Extra Large'
+        ];
 
 
-if (
-    !in_array(
-        $priority,
-        $allowedPriorities,
-        true
-    )
-) {
+        if (
+            !in_array(
+                $priority,
+                $allowedPriorities,
+                true
+            )
+        ) {
 
-    exit(
-        'Invalid priority.'
-    );
-}
+            exit(
+            'Invalid priority.'
+            );
+        }
 
 
-if (
-    !in_array(
-        $wasteSize,
-        $allowedWasteSizes,
-        true
-    )
-) {
+        if (
+            !in_array(
+                $wasteSize,
+                $allowedWasteSizes,
+                true
+            )
+        ) {
 
-    exit(
-        'Invalid waste size.'
-    );
-}
+            exit(
+            'Invalid waste size.'
+            );
+        }
 
         $allowed = ['General Waste','Plastic','Electronic Waste','Bulky Waste','Organic Waste','Hazardous Waste'];
         if (!in_array($category, $allowed, true) || $description === '' || $address === '' || !$preferred) {
@@ -98,26 +98,26 @@ if (
         }
 
         $uploader =
-    new SecureImageUploader();
+            new SecureImageUploader();
 
 
-$imagePaths =
-    $uploader->uploadMultiple(
+        $imagePaths =
+            $uploader->uploadMultiple(
 
-        $_FILES[
-            'waste_images'
-        ]
-        ?? [],
+                $_FILES[
+                'waste_images'
+                ]
+                ?? [],
 
-        'waste',
+                'waste',
 
-        5
-    );
+                5
+            );
 
 
-$imagePath =
-    $imagePaths[0]
-    ?? null;
+        $imagePath =
+            $imagePaths[0]
+            ?? null;
 
         $report = new WasteReport();
         $report->residentId = (int)$_SESSION['user_id'];
@@ -153,101 +153,101 @@ $imagePath =
     }
 
     public function cancel(): void
-{
-    // Only Resident can cancel a collection request
-    Security::requireRole(['Resident']);
+    {
+        // Only Resident can cancel a collection request
+        Security::requireRole(['Resident']);
 
-    // Prevent CSRF attacks
-    Security::verifyCsrf();
+        // Prevent CSRF attacks
+        Security::verifyCsrf();
 
-    $collectionId = (int)($_POST['collection_id'] ?? 0);
+        $collectionId = (int)($_POST['collection_id'] ?? 0);
 
-    $collection = $this->em->find(
-        CollectionRequest::class,
-        $collectionId
-    );
-
-    if (!$collection) {
-        http_response_code(404);
-        exit('Collection request not found.');
-    }
-
-    /*
-     * SECURE CODING:
-     * Broken Access Control / IDOR protection.
-     *
-     * This prevents Resident A from cancelling
-     * Resident B's collection request by changing
-     * the collection ID manually.
-     */
-    CollectionAuthorization::ensureResidentOwns(
-        $collection
-    );
-
-    try {
-
-        /*
-         * DESIGN PATTERN:
-         * State Pattern
-         *
-         * Only a valid state is allowed to cancel.
-         * Example:
-         * Pending -> Cancelled = allowed
-         * Assigned -> Cancelled = blocked
-         * Completed -> Cancelled = blocked
-         */
-        $workflow = new CollectionWorkflow(
-            $collection->status
+        $collection = $this->em->find(
+            CollectionRequest::class,
+            $collectionId
         );
 
-        $collection->status =
-            $workflow->cancel();
-
-        /*
-         * Also update the related waste report.
-         */
-        $report = $this->em->find(
-            WasteReport::class,
-            $collection->wasteReportId
-        );
-
-        if ($report) {
-            $report->status = 'Cancelled';
+        if (!$collection) {
+            http_response_code(404);
+            exit('Collection request not found.');
         }
 
-        $this->em->flush();
-
         /*
-         * Existing Observer/Event system.
+         * SECURE CODING:
+         * Broken Access Control / IDOR protection.
+         *
+         * This prevents Resident A from cancelling
+         * Resident B's collection request by changing
+         * the collection ID manually.
          */
-        $this->dispatcher->dispatch(
-            'collection.cancelled',
-            [
-                'entity' => 'CollectionRequest',
-                'entity_id' => $collection->id,
-                'user_id' => $collection->residentId
-            ]
+        CollectionAuthorization::ensureResidentOwns(
+            $collection
         );
 
-        Security::flash(
-            'success',
-            'Collection request cancelled successfully.'
+        try {
+
+            /*
+             * DESIGN PATTERN:
+             * State Pattern
+             *
+             * Only a valid state is allowed to cancel.
+             * Example:
+             * Pending -> Cancelled = allowed
+             * Assigned -> Cancelled = blocked
+             * Completed -> Cancelled = blocked
+             */
+            $workflow = new CollectionWorkflow(
+                $collection->status
+            );
+
+            $collection->status =
+                $workflow->cancel();
+
+            /*
+             * Also update the related waste report.
+             */
+            $report = $this->em->find(
+                WasteReport::class,
+                $collection->wasteReportId
+            );
+
+            if ($report) {
+                $report->status = 'Cancelled';
+            }
+
+            $this->em->flush();
+
+            /*
+             * Existing Observer/Event system.
+             */
+            $this->dispatcher->dispatch(
+                'collection.cancelled',
+                [
+                    'entity' => 'CollectionRequest',
+                    'entity_id' => $collection->id,
+                    'user_id' => $collection->residentId
+                ]
+            );
+
+            Security::flash(
+                'success',
+                'Collection request cancelled successfully.'
+            );
+
+        } catch (\RuntimeException $e) {
+
+            Security::flash(
+                'error',
+                $e->getMessage()
+            );
+        }
+
+        header(
+            'Location: index.php?page=module2'
         );
 
-    } catch (\RuntimeException $e) {
-
-        Security::flash(
-            'error',
-            $e->getMessage()
-        );
+        exit;
     }
-
-    header(
-        'Location: index.php?page=module2'
-    );
-
-    exit;
-}
 
     public function admin(): void
     {
@@ -263,279 +263,328 @@ $imagePath =
         view('module2/admin', compact('collections','staff','reports','residents') + ['title'=>'Collection Assignment']);
     }
 
-   public function assign(): void
-{
-    // Only Admin can assign collection staff
-    Security::requireRole(['Admin']);
+    public function assign(): void
+    {
+        // Only Admin can assign collection staff
+        Security::requireRole(['Admin']);
 
-    // Prevent CSRF attacks
-    Security::verifyCsrf();
+        // Prevent CSRF attacks
+        Security::verifyCsrf();
 
-    $collectionId =
-        (int)($_POST['collection_id'] ?? 0);
+        $collectionId =
+            (int)($_POST['collection_id'] ?? 0);
 
-    $staffId =
-        (int)($_POST['staff_id'] ?? 0);
+        $staffId =
+            (int)($_POST['staff_id'] ?? 0);
 
-    $scheduledDate =
-        $_POST['scheduled_date'] ?? '';
-
-    /*
-     * Retrieve using Doctrine ORM
-     */
-    $collection = $this->em->find(
-        CollectionRequest::class,
-        $collectionId
-    );
-
-    $staff = $this->em->find(
-        User::class,
-        $staffId
-    );
-
-    if (!$collection) {
-
-        Security::flash(
-            'error',
-            'Collection request not found.'
-        );
-
-        header(
-            'Location: index.php?page=module2-admin'
-        );
-
-        exit;
-    }
-
-    if (!$staff) {
-
-        Security::flash(
-            'error',
-            'Collection staff not found.'
-        );
-
-        header(
-            'Location: index.php?page=module2-admin'
-        );
-
-        exit;
-    }
-
-    /*
-     * SECURE CODING:
-     * Validate that selected account
-     * is actually Collection Staff.
-     */
-    if (
-        $staff->role !==
-        'Collection Staff'
-    ) {
-
-        Security::flash(
-            'error',
-            'Selected user is not collection staff.'
-        );
-
-        header(
-            'Location: index.php?page=module2-admin'
-        );
-
-        exit;
-    }
-
-    /*
-     * Do not assign suspended staff.
-     */
-    if (
-        $staff->status !==
-        'Active'
-    ) {
-
-        Security::flash(
-            'error',
-            'Selected collection staff account is not active.'
-        );
-
-        header(
-            'Location: index.php?page=module2-admin'
-        );
-
-        exit;
-    }
-
-    if (
-        empty($scheduledDate)
-    ) {
-
-        Security::flash(
-            'error',
-            'Please select a collection date.'
-        );
-
-        header(
-            'Location: index.php?page=module2-admin'
-        );
-
-        exit;
-    }
-
-    /*
-     * Prevent scheduling in the past.
-     */
-    $schedule =
-        new \DateTime(
-            $scheduledDate
-        );
-
-    $today =
-        new \DateTime(
-            'today'
-        );
-
-    if (
-        $schedule < $today
-    ) {
-
-        Security::flash(
-            'error',
-            'Collection date cannot be in the past.'
-        );
-
-        header(
-            'Location: index.php?page=module2-admin'
-        );
-
-        exit;
-    }
-
-    try {
+        $scheduledDate =
+            $_POST['scheduled_date'] ?? '';
 
         /*
-         * DESIGN PATTERN:
-         * State Pattern
-         *
-         * The workflow decides whether
-         * the current state can be assigned.
+         * Retrieve using Doctrine ORM
          */
-        $workflow =
-            new CollectionWorkflow(
-                $collection->status
+        $collection = $this->em->find(
+            CollectionRequest::class,
+            $collectionId
+        );
+
+        $staff = $this->em->find(
+            User::class,
+            $staffId
+        );
+
+        if (!$collection) {
+
+            Security::flash(
+                'error',
+                'Collection request not found.'
             );
 
-        $newStatus =
-            $workflow->assign();
+            header(
+                'Location: index.php?page=module2-admin'
+            );
 
-        /*
-         * Save assignment
-         */
-        $collection->collectionStaffId =
-            $staff->id;
+            exit;
+        }
 
-        $collection->scheduledDate =
-            $schedule;
+        if (!$staff) {
 
-        $collection->status =
-            $newStatus;
+            Security::flash(
+                'error',
+                'Collection staff not found.'
+            );
 
-        /*
-         * Keep waste report status
-         * synchronized.
-         */
-        $report = $this->em->find(
-            WasteReport::class,
-            $collection->wasteReportId
-        );
+            header(
+                'Location: index.php?page=module2-admin'
+            );
 
-        if ($report) {
-            $report->status =
-                $newStatus;
+            exit;
         }
 
         /*
-         * Doctrine ORM writes changes
-         * to MySQL.
+         * SECURE CODING:
+         * Validate that selected account
+         * is actually Collection Staff.
          */
-        $this->em->flush();
+        if (
+            $staff->role !==
+            'Collection Staff'
+        ) {
+
+            Security::flash(
+                'error',
+                'Selected user is not collection staff.'
+            );
+
+            header(
+                'Location: index.php?page=module2-admin'
+            );
+
+            exit;
+        }
 
         /*
-         * Existing Observer event.
+         * Do not assign suspended staff.
          */
-        $this->dispatcher->dispatch(
-            'collection.assigned',
-            [
-                'entity' =>
-                    'CollectionRequest',
+        if (
+            $staff->status !==
+            'Active'
+        ) {
 
-                'entity_id' =>
-                    $collection->id,
+            Security::flash(
+                'error',
+                'Selected collection staff account is not active.'
+            );
 
-                'user_id' =>
-                    $collection->residentId
-            ]
-        );
+            header(
+                'Location: index.php?page=module2-admin'
+            );
+
+            exit;
+        }
+
+        if (
+            empty($scheduledDate)
+        ) {
+
+            Security::flash(
+                'error',
+                'Please select a collection date.'
+            );
+
+            header(
+                'Location: index.php?page=module2-admin'
+            );
+
+            exit;
+        }
 
         /*
-         * WEB SERVICE:
+         * Prevent scheduling in the past.
+         */
+        $schedule =
+            new \DateTime(
+                $scheduledDate
+            );
+
+        $today =
+            new \DateTime(
+                'today'
+            );
+
+        if (
+            $schedule < $today
+        ) {
+
+            Security::flash(
+                'error',
+                'Collection date cannot be in the past.'
+            );
+
+            header(
+                'Location: index.php?page=module2-admin'
+            );
+
+            exit;
+        }
+
+        /*
+         * WEB SERVICE (CONSUMED):
          *
-         * Module 2 consumes
-         * Module 5 notification service.
+         * Module 2 consumes Module 1's user-status service to
+         * re-verify the staff member's status at the moment of
+         * assignment, rather than trusting only our local read
+         * from a few lines above (which could be stale if the
+         * account was suspended between page load and submit).
          */
-        $client =
+        $statusClient =
             new InternalApiClient(
                 $this->app['base_url'],
                 $this->app['service_token']
             );
 
-        $client->call(
-            'notification.create',
-            [
-                'user_id' =>
-                    $collection->residentId,
+        $statusResponse =
+            $statusClient->call(
+                'user.status',
+                [
+                    'email' => $staff->email,
+                ]
+            );
 
-                'title' =>
-                    'Collection Assigned',
+        if (
+            ($statusResponse['status'] ?? null) === 'ERROR'
+        ) {
+            // Service unavailable / timeout: fail safe by trusting
+            // the local DB check already performed above, but log
+            // that the cross-check could not be completed.
+            error_log(
+                'Module 1 user-status service unavailable during assignment: '
+                . ($statusResponse['error'] ?? 'unknown error')
+            );
+        } elseif (
+            isset($statusResponse['userDetails']['status'])
+            && $statusResponse['userDetails']['status'] !== 'Active'
+        ) {
+            Security::flash(
+                'error',
+                'Selected collection staff account is no longer active (verified via Module 1 service).'
+            );
 
-                'message' =>
-                    'Your waste collection has been assigned to '
-                    .
-                    $staff->name
-                    .
-                    ' and scheduled for '
-                    .
-                    $schedule->format(
-                        'd M Y'
-                    )
-                    .
-                    '.',
+            header(
+                'Location: index.php?page=module2-admin'
+            );
 
-                'type' =>
-                    'Collection'
-            ]
+            exit;
+        }
+
+        try {
+
+            /*
+             * DESIGN PATTERN:
+             * State Pattern
+             *
+             * The workflow decides whether
+             * the current state can be assigned.
+             */
+            $workflow =
+                new CollectionWorkflow(
+                    $collection->status
+                );
+
+            $newStatus =
+                $workflow->assign();
+
+            /*
+             * Save assignment
+             */
+            $collection->collectionStaffId =
+                $staff->id;
+
+            $collection->scheduledDate =
+                $schedule;
+
+            $collection->status =
+                $newStatus;
+
+            /*
+             * Keep waste report status
+             * synchronized.
+             */
+            $report = $this->em->find(
+                WasteReport::class,
+                $collection->wasteReportId
+            );
+
+            if ($report) {
+                $report->status =
+                    $newStatus;
+            }
+
+            /*
+             * Doctrine ORM writes changes
+             * to MySQL.
+             */
+            $this->em->flush();
+
+            /*
+             * Existing Observer event.
+             */
+            $this->dispatcher->dispatch(
+                'collection.assigned',
+                [
+                    'entity' =>
+                        'CollectionRequest',
+
+                    'entity_id' =>
+                        $collection->id,
+
+                    'user_id' =>
+                        $collection->residentId
+                ]
+            );
+
+            /*
+             * WEB SERVICE:
+             *
+             * Module 2 consumes
+             * Module 5 notification service.
+             */
+            $client =
+                new InternalApiClient(
+                    $this->app['base_url'],
+                    $this->app['service_token']
+                );
+
+            $client->call(
+                'notification.create',
+                [
+                    'user_id' =>
+                        $collection->residentId,
+
+                    'title' =>
+                        'Collection Assigned',
+
+                    'message' =>
+                        'Your waste collection has been assigned to '
+                        .
+                        $staff->name
+                        .
+                        ' and scheduled for '
+                        .
+                        $schedule->format(
+                            'd M Y'
+                        )
+                        .
+                        '.',
+
+                    'type' =>
+                        'Collection'
+                ]
+            );
+
+            Security::flash(
+                'success',
+                'Collection staff assigned successfully.'
+            );
+
+        } catch (\RuntimeException $e) {
+
+            /*
+             * State Pattern rejects
+             * invalid transitions.
+             */
+            Security::flash(
+                'error',
+                $e->getMessage()
+            );
+        }
+
+        header(
+            'Location: index.php?page=module2-admin'
         );
 
-        Security::flash(
-            'success',
-            'Collection staff assigned successfully.'
-        );
-
-    } catch (\RuntimeException $e) {
-
-        /*
-         * State Pattern rejects
-         * invalid transitions.
-         */
-        Security::flash(
-            'error',
-            $e->getMessage()
-        );
+        exit;
     }
-
-    header(
-        'Location: index.php?page=module2-admin'
-    );
-
-    exit;
-}
 
     public function staff(): void
     {
@@ -558,7 +607,12 @@ $imagePath =
         Security::verifyCsrf();
 
         $c = $this->em->find(CollectionRequest::class, (int)($_POST['collection_id'] ?? 0));
-        if (!$c || $c->collectionStaffId !== (int)$_SESSION['user_id']) exit('Task not assigned to you.');
+        if (!$c) {
+            http_response_code(404);
+            exit('Task not found.');
+        }
+
+        \EcoBin\Services\CollectionAuthorization::ensureAssignedStaff($c);
 
         $new = $_POST['status'] ?? '';
         $valid = [

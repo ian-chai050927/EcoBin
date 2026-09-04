@@ -63,6 +63,7 @@ href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
 
 <link rel="stylesheet" href="assets/css/ecobin.css">
 <link rel="stylesheet" href="assets/css/Auth.css">
+<link rel="stylesheet" href="asses/css/operation.css">
 
 </head>
 

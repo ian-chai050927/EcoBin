@@ -11,10 +11,12 @@
 .stat-box .value { font-size: 1.8rem; font-weight: bold; color: #198754; margin-top: 5px; }
 </style>
 
-<div class="d-flex justify-content-between align-items-center mb-4 no-print">
-    <a href="index.php?page=module4" class="btn btn-outline-secondary"><i class="bi bi-arrow-left"></i> Back to Dashboard</a>
-    <button class="btn btn-success" onclick="window.print()"><i class="bi bi-printer"></i> Print / Save as PDF</button>
-</div>
+<?php if (!($skipToolbar ?? false)): ?>
+    <div class="d-flex justify-content-between align-items-center mb-4 no-print">
+        <a href="index.php?page=module4" class="btn btn-outline-secondary"><i class="bi bi-arrow-left"></i> Back to Dashboard</a>
+        <button class="btn btn-success" onclick="window.print()"><i class="bi bi-printer"></i> Print / Save as PDF</button>
+    </div>
+<?php endif; ?>
 
 <div id="printableReport" class="card shadow-sm p-5 bg-white">
     <div class="report-header d-flex justify-content-between align-items-end">

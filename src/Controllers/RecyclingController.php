@@ -8,10 +8,15 @@ use EcoBin\Entities\RecyclingAppointment;
 use EcoBin\Entities\RewardTransaction;
 use EcoBin\Entities\User;
 use EcoBin\Services\Security;
+use EcoBin\Services\InternalApiClient;
 
 class RecyclingController
 {
-    public function __construct(private EntityManagerInterface $em, private $dispatcher) {}
+    public function __construct(
+        private EntityManagerInterface $em,
+        private array $app,
+        private $dispatcher
+    ) {}
 
     public function resident(): void
     {
@@ -62,7 +67,7 @@ class RecyclingController
     public function appointment(): void
     {
         Security::requireRole(['Resident']); Security::verifyCsrf();
-        
+
         $limiter = new \EcoBin\Services\RateLimiter($this->em);
         try {
             $limiter->checkAndLog((int)$_SESSION['user_id'], 'module3.appointment', 3, 3600);
@@ -179,7 +184,7 @@ class RecyclingController
     {
         Security::requireRole(['Resident']); Security::verifyCsrf();
         $uid = (int)$_SESSION['user_id'];
-        
+
         $limiter = new \EcoBin\Services\RateLimiter($this->em);
         try {
             $limiter->checkAndLog($uid, 'module3.redeem', 5, 3600); // Max 5 redemptions per hour
@@ -219,6 +224,30 @@ class RecyclingController
             if (isset($this->dispatcher)) {
                 $this->dispatcher->dispatch('reward.redeemed', ['user_id' => $uid, 'points' => $pointsToRedeem]);
             }
+
+
+            $user = $this->em->find(User::class, $uid);
+            if ($user && $user->email) {
+                $client = new InternalApiClient(
+                    $this->app['base_url'],
+                    $this->app['service_token']
+                );
+
+                $emailResponse = $client->call('notification.email', [
+                    'email' => $user->email,
+                    'subject' => 'EcoBin: Reward redemption receipt',
+                    'message' => '<p>You redeemed <strong>' . $pointsToRedeem
+                        . ' points</strong> for "' . htmlspecialchars($rewardName, ENT_QUOTES, 'UTF-8')
+                        . '".</p>',
+                ]);
+
+                if (($emailResponse['status'] ?? null) === 'ERROR') {
+
+                    error_log('Module 5 notification.email unavailable for redemption receipt: '
+                        . ($emailResponse['error'] ?? 'unknown error'));
+                }
+            }
+
             Security::flash('success', 'Reward redeemed successfully!');
         } catch (\Exception $e) {
             $this->em->rollback();

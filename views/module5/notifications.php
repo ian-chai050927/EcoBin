@@ -7,9 +7,17 @@
 <div class="card p-4 mt-4"><h5>Module 5 → Module 2 Web-Service Status Check</h5><p class="small-muted">Demonstrates reverse-direction service communication.</p>
 <div class="input-group"><input id="collectionId" class="form-control" type="number" min="1" placeholder="Collection request ID"><button class="btn btn-primary" onclick="checkStatus()">Check Status API</button></div><pre id="apiResult" class="mt-3 mb-0"></pre></div>
 <script>
-async function checkStatus(){
- const id=document.getElementById('collectionId').value;
- const req={requestID:crypto.randomUUID(),timestamp:new Date().toISOString(),service:'collection.status',payload:{collection_id:Number(id)}};
+    function generateRequestId() {
+        return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
+            const r = Math.random() * 16 | 0;
+            const v = c === 'x' ? r : (r & 0x3 | 0x8);
+            return v.toString(16);
+        });
+    }
+
+    async function checkStatus(){
+        const id=document.getElementById('collectionId').value;
+        const req={requestID:generateRequestId(),timestamp:new Date().toISOString(),service:'collection.status',payload:{collection_id:Number(id)}};
  const r=await fetch('api.php',{method:'POST',headers:{'Content-Type':'application/json','X-Service-Token':'<?= \EcoBin\Services\Security::e((require __DIR__ . '/../../config/app.php')['service_token']) ?>'},body:JSON.stringify(req)});
  document.getElementById('apiResult').textContent=JSON.stringify(await r.json(),null,2);
 }

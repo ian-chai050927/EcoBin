@@ -15,11 +15,14 @@
         <a class="btn btn-outline-success" href="index.php?page=module4-report&period=annual"><i class="bi bi-file-earmark-bar-graph"></i> Annual</a>
         <div class="btn-group">
             <button type="button" class="btn btn-outline-primary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
-                Export CSV
+                Export
             </button>
             <ul class="dropdown-menu dropdown-menu-end">
-                <li><a class="dropdown-item" href="index.php?page=module4-csv&type=collections">Collection Data</a></li>
-                <li><a class="dropdown-item" href="index.php?page=module4-csv&type=recycling">Recycling Data</a></li>
+                <li><a class="dropdown-item" href="index.php?page=module4-csv&type=collections">Collection Data (CSV)</a></li>
+                <li><a class="dropdown-item" href="index.php?page=module4-csv&type=recycling">Recycling Data (CSV)</a></li>
+                <li><hr class="dropdown-divider"></li>
+                <li><a class="dropdown-item" href="index.php?page=module4-pdf&period=monthly">Monthly Report (PDF)</a></li>
+                <li><a class="dropdown-item" href="index.php?page=module4-pdf&period=annual">Annual Report (PDF)</a></li>
             </ul>
         </div>
     </div>
@@ -73,8 +76,15 @@
 <script>
 (async()=>{
     try {
+        function generateRequestId() {
+        return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
+            const r = Math.random() * 16 | 0;
+            const v = c === 'x' ? r : (r & 0x3 | 0x8);
+            return v.toString(16);
+        });
+    }
         const req = {
-            requestID: crypto.randomUUID(),
+            requestID: generateRequestId(),
             timestamp: new Date().toISOString(),
             service: 'dashboard.stats',
             payload: {}

@@ -5,6 +5,7 @@ use EcoBin\Entities\CollectionRequest;
 use EcoBin\Entities\Notification;
 use EcoBin\Entities\WasteReport;
 use EcoBin\Entities\RecyclingSubmission;
+use EcoBin\Entities\User;
 
 $container = require __DIR__ . '/bootstrap.php';
 $em = $container['em'];
@@ -50,6 +51,27 @@ try {
             ];
             break;
 
+        case 'user.status':
+            // Module 1 (Auth): exposed so other modules can re-verify
+            // a user's current role/status at the moment of use,
+            // rather than trusting a possibly-stale local read.
+            $email = trim((string)($payload['email'] ?? ''));
+            if ($email === '' || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
+                throw new RuntimeException('Invalid or missing email address.');
+            }
+            $u = $em->getRepository(User::class)->findOneBy(['email' => $email]);
+            $data = [
+                'found' => (bool) $u,
+            ];
+            if ($u) {
+                $data['userDetails'] = [
+                    'name' => $u->name,
+                    'role' => $u->role,
+                    'status' => $u->status,
+                ];
+            }
+            break;
+
         case 'notification.create':
             $n = new Notification();
             $n->userId = (int)($payload['user_id'] ?? 0);
@@ -65,9 +87,26 @@ try {
             // Use the Facade Pattern to hide complex aggregation logic
             require_once __DIR__ . '/src/Services/DashboardAnalyticsFacade.php';
             $facade = new \EcoBin\Services\DashboardAnalyticsFacade($em);
-            
+
             // The getDashboardStats method has built-in Date Bounding to mitigate Application-Level DoS
             $data = $facade->getDashboardStats();
+            break;
+        case 'notification.email':
+            $email = trim((string)($payload['email'] ?? ''));
+            $subject = trim((string)($payload['subject'] ?? ''));
+            $message = (string)($payload['message'] ?? '');
+            if ($email === '' || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
+                throw new RuntimeException('Invalid or missing email address.');
+            }
+            if ($subject === '' || $message === '') {
+                throw new RuntimeException('Subject and message are required.');
+            }
+            $mailer = new \EcoBin\Services\Mailer($app['mail'] ?? []);
+            $sent = $mailer->send($email, $subject, $message);
+            if (!$sent) {
+                throw new RuntimeException('Email dispatch failed.');
+            }
+            $data = ['email' => $email, 'delivered' => true];
             break;
 
         default:

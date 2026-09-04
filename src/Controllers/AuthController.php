@@ -31,8 +31,8 @@ class AuthController
                 exit;
             }
 
-            if ($user->status !== 'Active') {
-                Security::flash('error', 'This account is suspended.');
+            if (!$user->emailVerifiedAt) {
+                Security::flash('error', 'Please verify your email before logging in. Check your inbox for the verification link.');
                 header('Location: index.php?page=login');
                 exit;
             }
@@ -85,25 +85,26 @@ class AuthController
                 . '/index.php?page=verify&token='
                 . urlencode($u->verificationToken);
 
-            // --- SERVICE CONSUMPTION (IFA COMPLIANT) ---
-            // Prepare the IFA-compliant request payload
-            $payload = json_encode([
-                'requestID' => uniqid('req_'),
-                'timeStamp' => (new \DateTime())->format('Y-m-d H:i:s'),
-                'action'    => 'sendEmail',
-                'email'     => $u->email,
-                'subject'   => 'Verify your EcoBin email',
-                'message'   => 'Verification link: ' . $verifyUrl
-            ]);
+            $request = [
+                'requestID' => uniqid('req_', true),
+                'timestamp' => (new \DateTime())->format('c'),
+                'service'   => 'notification.email',
+                'payload'   => [
+                    'email'   => $u->email,
+                    'subject' => 'Verify your EcoBin email',
+                    'message' => '<p>Click to verify your account: <a href="' . htmlspecialchars($verifyUrl) . '">' . htmlspecialchars($verifyUrl) . '</a></p>',
+                ],
+            ];
+            $payload = json_encode($request);
 
-            // Initialize cURL to consume Module 5's Web Service
-            $ch = curl_init($this->app['base_url'] . '/api.php?service=notification');
+            $ch = curl_init($this->app['base_url'] . '/api.php');
             curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
             curl_setopt($ch, CURLOPT_POST, true);
             curl_setopt($ch, CURLOPT_POSTFIELDS, $payload);
             curl_setopt($ch, CURLOPT_HTTPHEADER, [
                 'Content-Type: application/json',
-                'Content-Length: ' . strlen($payload)
+                'X-Service-Token: ' . $this->app['service_token'],
+                'Content-Length: ' . strlen($payload),
             ]);
 
             curl_exec($ch);
@@ -167,34 +168,34 @@ class AuthController
                     . urlencode($user->resetToken);
 
                 // --- SERVICE CONSUMPTION (IFA COMPLIANT) ---
-                // Prepare the IFA-compliant request payload
-                $payload = json_encode([
-                    'requestID' => uniqid('req_'),
-                    'timeStamp' => (new \DateTime())->format('Y-m-d H:i:s'),
-                    'action'    => 'sendEmail',
-                    'email'     => $user->email,
-                    'subject'   => 'EcoBin password reset',
-                    'message'   => 'Reset link: ' . $url
-                ]);
+                $request = [
+                    'requestID' => uniqid('req_', true),
+                    'timestamp' => (new \DateTime())->format('c'),
+                    'service'   => 'notification.email',
+                    'payload'   => [
+                        'email'   => $user->email,
+                        'subject' => 'EcoBin password reset',
+                        'message' => '<p>Click to reset your password: <a href="' . htmlspecialchars($url) . '">' . htmlspecialchars($url) . '</a></p>',
+                    ],
+                ];
+                $payload = json_encode($request);
 
-                // Initialize cURL to consume Module 5's Web Service
-                $ch = curl_init($this->app['base_url'] . '/api.php?service=notification');
+                $ch = curl_init($this->app['base_url'] . '/api.php');
                 curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
                 curl_setopt($ch, CURLOPT_POST, true);
                 curl_setopt($ch, CURLOPT_POSTFIELDS, $payload);
                 curl_setopt($ch, CURLOPT_HTTPHEADER, [
                     'Content-Type: application/json',
-                    'Content-Length: ' . strlen($payload)
+                    'X-Service-Token: ' . $this->app['service_token'],
+                    'Content-Length: ' . strlen($payload),
                 ]);
 
-                // Execute and capture the response
                 $apiResponse = curl_exec($ch);
                 curl_close($ch);
 
                 $responseData = json_decode($apiResponse, true);
 
-                // IFA Response format check
-                if (isset($responseData['status']) && $responseData['status'] === 'S') {
+                if (isset($responseData['status']) && $responseData['status'] === 'SUCCESS') {
                     Security::flash('success', 'If the email exists, a reset message has been generated.');
                 } else {
                     Security::flash('error', 'Notification service is currently unavailable.');

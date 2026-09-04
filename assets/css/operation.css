@@ -1,0 +1,77 @@
+/* ===============================
+   COLLECTION OPS — dispatch queue (admin.php)
+   and job list (staff.php)
+================================ */
+
+.dispatch-count {
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--eco-muted);
+    background: var(--eco-bg);
+    border: 1px solid var(--eco-border);
+    border-radius: 999px;
+    padding: 4px 12px;
+}
+
+.waiting-time {
+    font-size: 12px;
+    color: var(--eco-muted);
+}
+
+
+/* Priority flag — shown on a pending request when it isn't Normal */
+
+.priority-flag {
+    display: inline-flex;
+    align-items: center;
+    padding: 4px 10px;
+    border-radius: 999px;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+}
+
+.priority-urgent { background: #fde3e3; color: #b3261e; }
+.priority-high   { background: #fff4d6; color: #946200; }
+.priority-low    { background: #eceff1; color: #637079; }
+
+
+/* Left-edge accent on the card itself, keyed off the same priority
+   value — echoes the flag color so the queue is scannable even
+   before reading any text. */
+
+.collection-card-urgent { border-left: 4px solid #b3261e; }
+.collection-card-high   { border-left: 4px solid #946200; }
+.collection-card-normal { border-left: 4px solid transparent; }
+.collection-card-low    { border-left: 4px solid var(--eco-border); }
+
+
+/* Staff-side "this is today's stop" treatment */
+
+.collection-card-today {
+    border: 1px solid var(--eco-primary);
+    background: var(--eco-primary-soft);
+}
+
+.today-flag {
+    display: inline-block;
+    background: var(--eco-primary);
+    color: white;
+    font-size: 11px;
+    font-weight: 700;
+    padding: 3px 10px;
+    border-radius: 999px;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+}
+
+.collection-assigned-note {
+    background: var(--eco-primary-soft);
+    color: var(--eco-primary-dark);
+    border-radius: 8px;
+    padding: 10px 14px;
+    font-size: 13px;
+    font-weight: 600;
+    text-align: center;
+}

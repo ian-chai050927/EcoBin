@@ -27,8 +27,8 @@ function view(string $name, array $data = []): void {
 
 $auth = new AuthController($em, $app, $dispatcher);
 $waste = new WasteController($em, $app, $dispatcher);
-$recycling = new RecyclingController($em, $dispatcher);
-$dashboard = new DashboardController($em);
+$recycling = new RecyclingController($em, $app, $dispatcher);
+$dashboard = new DashboardController($em, $app);
 
 
 $notificationService = new NotificationService($em);
@@ -58,10 +58,11 @@ switch ($page) {
     case 'user-status': $auth->changeStatus(); break;
     case 'user-create': $auth->createUser(); break;
     case 'user-update': $auth->updateUser(); break;
+    case 'api-user-status': $auth->apiUserStatus(); break;
     case 'my-collections':$waste->myCollections();break;
 
     case 'module2':
-        $waste->resident(); 
+        $waste->resident();
         break;
 
     case 'module2-submit':
@@ -100,6 +101,7 @@ switch ($page) {
     case 'module4': $dashboard->index(); break;
     case 'module4-report': $dashboard->report(); break;
     case 'module4-csv': $dashboard->csv(); break;
+    case 'module4-pdf': $dashboard->pdf(); break;
 
     case 'notifications': $system->notifications(); break;
     case 'notification-read': $system->markRead(); break;
