@@ -16,6 +16,19 @@
     --eco-info: #0dcaf0;
 
     --sidebar-width: 260px;
+
+    /* Shadow scale — soft and low-opacity throughout so nothing
+       reads as a stock Bootstrap card shadow. */
+    --eco-shadow-sm: 0 1px 2px rgba(23, 32, 28, 0.04);
+    --eco-shadow-md: 0 10px 30px rgba(32, 56, 44, 0.06);
+    --eco-shadow-lg: 0 20px 45px rgba(32, 56, 44, 0.10);
+
+    --eco-radius-sm: 10px;
+    --eco-radius-md: 14px;
+    --eco-radius-lg: 18px;
+    --eco-radius-xl: 24px;
+
+    --eco-transition: 0.16s ease;
 }
 
 
@@ -35,6 +48,13 @@ body {
             BlinkMacSystemFont,
             "Segoe UI",
             sans-serif;
+    -webkit-font-smoothing: antialiased;
+}
+
+
+:focus-visible {
+    outline: 2px solid var(--eco-primary);
+    outline-offset: 2px;
 }
 
 
@@ -82,7 +102,7 @@ body {
     justify-content: center;
 
     background: var(--eco-primary);
-    border-radius: 14px;
+    border-radius: var(--eco-radius-md);
 
     font-size: 22px;
 }
@@ -102,42 +122,65 @@ body {
 
     letter-spacing: 1.2px;
 
-    margin:
-            20px
-            12px
-            8px;
+    margin: 20px 12px 8px;
 
     text-transform: uppercase;
 }
 
 
+/* Left-accent indicator instead of a flat solid fill on the active
+   link — a full-bleed color block on every hover/active state is
+   the single fastest way a sidebar reads as generated rather than
+   designed. A thin accent bar + soft tint reads calmer and more
+   like something a person actually chose. */
+
 .eco-nav-link {
+    position: relative;
     display: flex;
     align-items: center;
     gap: 12px;
 
-    padding: 12px 14px;
-    margin-bottom: 5px;
+    padding: 12px 14px 12px 17px;
+    margin-bottom: 2px;
 
     color: #cfe0d7;
 
     text-decoration: none;
 
-    border-radius: 12px;
+    border-radius: var(--eco-radius-sm);
 
-    transition: 0.2s ease;
+    transition: background var(--eco-transition), color var(--eco-transition);
+}
+
+
+.eco-nav-link::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 3px;
+    height: 0;
+    border-radius: 3px;
+    background: var(--eco-primary);
+    transition: height var(--eco-transition);
 }
 
 
 .eco-nav-link:hover {
-    background: rgba(255,255,255,0.08);
+    background: rgba(255, 255, 255, 0.06);
     color: white;
 }
 
 
 .eco-nav-link.active {
-    background: var(--eco-primary);
+    background: rgba(22, 138, 91, 0.16);
     color: white;
+}
+
+
+.eco-nav-link.active::before {
+    height: 20px;
 }
 
 
@@ -166,8 +209,7 @@ body {
 
     background: white;
 
-    border-bottom:
-            1px solid var(--eco-border);
+    border-bottom: 1px solid var(--eco-border);
 
     display: flex;
     align-items: center;
@@ -186,6 +228,7 @@ body {
     font-weight: 800;
     margin: 0;
     font-size: 20px;
+    letter-spacing: -0.3px;
 }
 
 
@@ -234,14 +277,16 @@ body {
 
 
 .eco-heading {
-    font-size: 30px;
+    font-size: 28px;
     font-weight: 800;
+    letter-spacing: -0.4px;
     margin-bottom: 6px;
 }
 
 
 .eco-subheading {
     color: var(--eco-muted);
+    font-size: 15px;
     margin-bottom: 28px;
 }
 
@@ -252,17 +297,50 @@ body {
 
 .eco-card {
     background: var(--eco-card);
-
-    border:
-            1px solid var(--eco-border);
-
-    border-radius: 18px;
-
-    box-shadow:
-            0 10px 30px
-            rgba(32, 56, 44, 0.05);
-
+    border: 1px solid var(--eco-border);
+    border-radius: var(--eco-radius-lg);
+    box-shadow: var(--eco-shadow-md);
     padding: 24px;
+    transition: box-shadow var(--eco-transition), transform var(--eco-transition);
+}
+
+
+/* A card wrapped in <a> should feel like a link, not just a box that
+   happens to be clickable — this is what home.php's role shortcuts
+   and the admin dashboard tiles use. */
+
+.eco-card-link {
+    display: block;
+    color: inherit;
+    text-decoration: none;
+}
+
+.eco-card-link .eco-card:hover {
+    box-shadow: var(--eco-shadow-lg);
+    transform: translateY(-3px);
+    border-color: var(--eco-primary);
+}
+
+
+/* Topbar notification bell — was a plain Bootstrap btn-light circle,
+   the one un-branded control in an otherwise designed topbar. */
+
+.eco-icon-btn {
+    width: 42px;
+    height: 42px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    background: var(--eco-bg);
+    color: var(--eco-text);
+    border: 1px solid var(--eco-border);
+    transition: background var(--eco-transition), color var(--eco-transition);
+}
+
+.eco-icon-btn:hover {
+    background: var(--eco-primary-soft);
+    color: var(--eco-primary-dark);
 }
 
 
@@ -272,46 +350,53 @@ body {
 
 .eco-stat-card {
     background: white;
-
-    border:
-            1px solid var(--eco-border);
-
-    border-radius: 18px;
-
+    border: 1px solid var(--eco-border);
+    border-radius: var(--eco-radius-lg);
     padding: 22px;
-
     height: 100%;
+    transition: box-shadow var(--eco-transition), transform var(--eco-transition);
+}
+
+
+.eco-stat-card:hover {
+    box-shadow: var(--eco-shadow-lg);
+    transform: translateY(-2px);
 }
 
 
 .eco-stat-icon {
-    width: 48px;
-    height: 48px;
+    width: 46px;
+    height: 46px;
 
     display: flex;
     align-items: center;
     justify-content: center;
 
-    border-radius: 14px;
+    border-radius: var(--eco-radius-md);
 
     background: var(--eco-primary-soft);
     color: var(--eco-primary);
 
-    font-size: 22px;
+    font-size: 20px;
 
-    margin-bottom: 18px;
+    margin-bottom: 16px;
 }
 
 
 .eco-stat-label {
     color: var(--eco-muted);
-    font-size: 14px;
+    font-size: 13px;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+    font-weight: 600;
 }
 
 
 .eco-stat-number {
-    font-size: 30px;
+    font-size: 28px;
     font-weight: 800;
+    letter-spacing: -0.4px;
+    margin-top: 2px;
 }
 
 
@@ -319,37 +404,51 @@ body {
    BUTTON
 ================================ */
 
+.btn-eco,
+.btn-eco-outline {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    cursor: pointer;
+    font-size: 14.5px;
+    text-decoration: none;
+    transition: background var(--eco-transition), color var(--eco-transition),
+    box-shadow var(--eco-transition), transform var(--eco-transition);
+}
+
+
 .btn-eco {
     background: var(--eco-primary);
     color: white;
-
     border: none;
-
-    border-radius: 10px;
-
+    border-radius: var(--eco-radius-sm);
     padding: 10px 18px;
-
     font-weight: 600;
+    box-shadow: 0 1px 2px rgba(15, 108, 70, 0.15);
 }
 
 
 .btn-eco:hover {
     background: var(--eco-primary-dark);
     color: white;
+    box-shadow: 0 4px 12px rgba(15, 108, 70, 0.25);
+    transform: translateY(-1px);
+}
+
+
+.btn-eco:active {
+    transform: translateY(0);
+    box-shadow: 0 1px 2px rgba(15, 108, 70, 0.2);
 }
 
 
 .btn-eco-outline {
-    border:
-            1px solid var(--eco-primary);
-
+    border: 1px solid var(--eco-primary);
     color: var(--eco-primary);
     background: transparent;
-
-    border-radius: 10px;
-
+    border-radius: var(--eco-radius-sm);
     padding: 9px 18px;
-
     font-weight: 600;
 }
 
@@ -360,38 +459,49 @@ body {
 }
 
 
+.btn-eco:disabled,
+.btn-eco-outline:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+}
+
+
+.btn-eco:disabled:hover {
+    background: var(--eco-primary);
+}
+
+
+.btn-eco-outline:disabled:hover {
+    background: transparent;
+    color: var(--eco-primary);
+}
+
+
 /* ===============================
    FORMS
 ================================ */
 
 .form-control,
 .form-select {
-
-    border-radius: 10px;
-
-    border:
-            1px solid #dce5df;
-
-    padding:
-            11px 13px;
+    border-radius: var(--eco-radius-sm);
+    border: 1px solid #dce5df;
+    padding: 11px 13px;
+    transition: border-color var(--eco-transition), box-shadow var(--eco-transition);
 }
 
 
 .form-control:focus,
 .form-select:focus {
-
-    border-color:
-            var(--eco-primary);
-
-    box-shadow:
-            0 0 0
-            0.2rem
-            rgba(22,138,91,0.12);
+    border-color: var(--eco-primary);
+    box-shadow: 0 0 0 0.2rem rgba(22, 138, 91, 0.12);
 }
 
 
 .form-label {
     font-weight: 600;
+    font-size: 14px;
 }
 
 
@@ -405,28 +515,28 @@ body {
 
 
 .table thead th {
-    font-size: 12px;
-
-    color:
-            var(--eco-muted);
-
+    font-size: 11.5px;
+    color: var(--eco-muted);
     text-transform: uppercase;
-
-    letter-spacing:
-            0.4px;
-
-    border-bottom:
-            1px solid var(--eco-border);
+    letter-spacing: 0.4px;
+    font-weight: 700;
+    border-bottom: 1px solid var(--eco-border);
 }
 
 
 .table td {
-    padding:
-            15px
-            10px;
+    padding: 15px 10px;
+    border-color: var(--eco-border);
+}
 
-    border-color:
-            var(--eco-border);
+
+.table tbody tr {
+    transition: background var(--eco-transition);
+}
+
+
+.table tbody tr:hover {
+    background: var(--eco-bg);
 }
 
 
@@ -436,74 +546,35 @@ body {
 
 .eco-status {
     display: inline-flex;
-
-    padding:
-            6px
-            11px;
-
-    border-radius:
-            999px;
-
-    font-size:
-            12px;
-
-    font-weight:
-            700;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 11px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 700;
 }
 
 
-.eco-status-pending {
-    background:
-            #fff4d6;
+/* A small dot reads as more considered than a flat color pill on
+   its own — it's the kind of detail that separates a "made this"
+   status chip from a "class=badge-success" default. */
 
-    color:
-            #946200;
+.eco-status::before {
+    content: "";
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: currentColor;
+    opacity: 0.7;
 }
 
 
-.eco-status-assigned {
-    background:
-            #e3efff;
-
-    color:
-            #1257a6;
-}
-
-
-.eco-status-progress {
-    background:
-            #d9f5fb;
-
-    color:
-            #087889;
-}
-
-
-.eco-status-completed {
-    background:
-            #dcf5e8;
-
-    color:
-            #147447;
-}
-
-
-.eco-status-cancelled {
-    background:
-            #eceff1;
-
-    color:
-            #637079;
-}
-
-
-.eco-status-rejected {
-    background:
-            #fde3e3;
-
-    color:
-            #b3261e;
-}
+.eco-status-pending   { background: #fff4d6; color: #946200; }
+.eco-status-assigned  { background: #e3efff; color: #1257a6; }
+.eco-status-progress  { background: #d9f5fb; color: #087889; }
+.eco-status-completed { background: #dcf5e8; color: #147447; }
+.eco-status-cancelled { background: #eceff1; color: #637079; }
+.eco-status-rejected  { background: #fde3e3; color: #b3261e; }
 
 
 /*
@@ -516,8 +587,8 @@ body {
    Appointment   Pending, Confirmed → assigned, Completed, Cancelled
    Centre        Open → completed, Full → pending, Closed → cancelled
 
-   The mapping itself lives in eco_status_badge() in components.php —
-   don't hand-roll badge color logic in a view again.
+   The mapping itself lives in View::statusBadge() — don't hand-roll
+   badge color logic in a view again.
 */
 
 
@@ -526,42 +597,59 @@ body {
 ================================ */
 
 .eco-hero {
-    background:
-            linear-gradient(
-                    135deg,
-                    #ffffff,
-                    #ecf9f2
-            );
-
-    border:
-            1px solid var(--eco-border);
-
-    border-radius:
-            24px;
-
-    padding:
-            42px;
-
-    margin-bottom:
-            30px;
+    background: linear-gradient(135deg, #ffffff, #ecf9f2);
+    border: 1px solid var(--eco-border);
+    border-radius: var(--eco-radius-xl);
+    padding: 42px;
+    margin-bottom: 30px;
 }
 
 
 .eco-hero h1 {
-    font-weight:
-            850;
-
-    font-size:
-            38px;
+    font-weight: 800;
+    font-size: 36px;
+    letter-spacing: -0.6px;
 }
 
 
 .eco-hero p {
-    color:
-            var(--eco-muted);
+    color: var(--eco-muted);
+    font-size: 17px;
+}
 
-    font-size:
-            17px;
+
+/* Photo variant — for the guest landing hero only. The functional
+   role dashboards (Resident/Staff/Operator) keep the plain gradient
+   since a photo behind text you read every single day gets tiring
+   fast; a marketing-style landing page is seen once and can afford
+   the drama. */
+
+.eco-hero-photo {
+    background-image:
+            linear-gradient(135deg, rgba(10, 26, 19, 0.55) 0%, rgba(10, 26, 19, 0.88) 100%),
+            url('../images/P2.jpg');
+    background-size: cover;
+    background-position: center;
+    padding: 72px 56px;
+    min-height: 380px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.eco-hero-photo h1,
+.eco-hero-photo p {
+    color: #eef3f0;
+    max-width: 640px;
+}
+
+.eco-hero-photo .btn-eco-outline {
+    color: white;
+    border-color: rgba(255, 255, 255, 0.6);
+}
+
+.eco-hero-photo .btn-eco-outline:hover {
+    background: rgba(255, 255, 255, 0.12);
 }
 
 
@@ -569,54 +657,25 @@ body {
    MOBILE
 ================================ */
 
-@media
-(max-width: 992px) {
+@media (max-width: 992px) {
 
     .eco-sidebar {
         display: none;
     }
 
-
     .eco-main {
         margin-left: 0;
     }
 
-
     .eco-topbar {
-        padding:
-                0
-                18px;
+        padding: 0 18px;
     }
-
 
     .eco-content {
-        padding:
-                20px;
+        padding: 20px;
     }
-
 
     .eco-user-info {
         display: none;
     }
-}
-
-
-/* ===============================
-   BUTTON — disabled state
-   (needed by resident.php's point-locked reward buttons)
-================================ */
-
-.btn-eco:disabled,
-.btn-eco-outline:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-}
-
-.btn-eco:disabled:hover {
-    background: var(--eco-primary);
-}
-
-.btn-eco-outline:disabled:hover {
-    background: transparent;
-    color: var(--eco-primary);
 }
