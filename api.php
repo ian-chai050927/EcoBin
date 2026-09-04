@@ -54,7 +54,7 @@ try {
                 'collection_id'=>$c->id,
                 'status'=>$c->status,
                 'scheduled_date'=>$c->scheduledDate?->format('Y-m-d'),
-                'staff_id'=>$c->collectionStaffId
+                'staff_id' => $c->collectionStaff?->id
             ];
             break;
 

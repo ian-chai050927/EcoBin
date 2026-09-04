@@ -358,40 +358,233 @@ class WasteController
     }
 
     public function status(): void
-    {
-        Security::requireRole(['Collection Staff']);
-        Security::verifyCsrf();
+{
+    Security::requireRole([
+        'Collection Staff'
+    ]);
 
-        $c = $this->em->find(CollectionRequest::class, (int)($_POST['collection_id'] ?? 0));
-        if (!$c) {
-            http_response_code(404);
-            exit('Task not found.');
+    Security::verifyCsrf();
+
+
+    $collectionId =
+        (int)(
+            $_POST['collection_id']
+            ?? 0
+        );
+
+
+    $collection =
+        $this->em->find(
+            CollectionRequest::class,
+            $collectionId
+        );
+
+
+    if (!$collection) {
+
+        http_response_code(404);
+
+        exit(
+            'Collection task not found.'
+        );
+    }
+
+
+    /*
+     * SECURE CODING:
+     * Prevent Broken Access Control / IDOR.
+     *
+     * Staff may only update a collection
+     * assigned specifically to them.
+     */
+    CollectionAuthorization::ensureAssignedStaff(
+        $collection
+    );
+
+
+    $requestedStatus =
+        trim(
+            $_POST['status']
+            ?? ''
+        );
+
+
+    $remarks =
+        mb_substr(
+            trim(
+                $_POST['remarks']
+                ?? ''
+            ),
+            0,
+            1000
+        );
+
+
+    try {
+
+        /*
+         * DESIGN PATTERN:
+         * State Pattern controls all
+         * collection transitions.
+         */
+        $workflow =
+            new CollectionWorkflow(
+                $collection->status
+            );
+
+
+        if (
+            $requestedStatus
+            ===
+            'In Progress'
+        ) {
+
+            $newStatus =
+                $workflow->start();
+
+            $event =
+                'collection.in_progress';
+
+        } elseif (
+            $requestedStatus
+            ===
+            'Completed'
+        ) {
+
+            $newStatus =
+                $workflow->complete();
+
+            $event =
+                'collection.completed';
+
+        } else {
+
+            throw new \RuntimeException(
+                'Invalid collection status.'
+            );
         }
 
-        CollectionAuthorization::ensureAssignedStaff($c);
 
-        $new   = $_POST['status'] ?? '';
-        $valid = [
-            'Assigned'    => ['In Progress'],
-            'In Progress' => ['Completed'],
-            'Completed'   => [],
-        ];
-        if (!in_array($new, $valid[$c->status] ?? [], true)) exit('Invalid status transition.');
+        $collection->status =
+            $newStatus;
 
-        $c->status  = $new;
-        $c->remarks = mb_substr(trim($_POST['remarks'] ?? ''), 0, 1000);
+
+        $collection->remarks =
+            $remarks;
+
+
+        /*
+         * Keep WasteReport and
+         * CollectionRequest synchronized.
+         */
+        if (
+            $collection->wasteReport
+        ) {
+
+            $collection
+                ->wasteReport
+                ->status =
+                $newStatus;
+        }
+
+
         $this->em->flush();
 
-        $event = $new === 'In Progress' ? 'collection.in_progress' : 'collection.completed';
-        $this->dispatcher->dispatch($event, [
-            'entity'    => 'CollectionRequest',
-            'entity_id' => $c->id,
-            'user_id'   => $c->resident->id,
-        ]);
 
-        Security::flash('success', 'Collection status updated.');
-        header('Location: index.php?page=module2-staff'); exit;
+        /*
+         * Observer / Event integration
+         */
+        $this->dispatcher->dispatch(
+            $event,
+            [
+                'entity'
+                    => 'CollectionRequest',
+
+                'entity_id'
+                    => $collection->id,
+
+                'user_id'
+                    => $collection
+                        ->resident
+                        ->id,
+            ]
+        );
+
+
+        /*
+         * WEB SERVICE:
+         * Notify Resident about
+         * collection progress.
+         */
+        $client =
+            new InternalApiClient(
+                $this->app['base_url'],
+                $this->app['service_token']
+            );
+
+
+        if (
+            $newStatus
+            ===
+            'In Progress'
+        ) {
+
+            $message =
+                'Your waste collection is now in progress.';
+
+        } else {
+
+            $message =
+                'Your waste collection has been completed successfully.';
+        }
+
+
+        $client->call(
+            'notification.create',
+            [
+                'user_id'
+                    => $collection
+                        ->resident
+                        ->id,
+
+                'title'
+                    => 'Collection '
+                        . $newStatus,
+
+                'message'
+                    => $message,
+
+                'type'
+                    => 'Collection'
+            ]
+        );
+
+
+        Security::flash(
+            'success',
+            'Collection status updated to '
+            . $newStatus
+            . '.'
+        );
+
+
+    } catch (
+        \RuntimeException $e
+    ) {
+
+        Security::flash(
+            'error',
+            $e->getMessage()
+        );
     }
+
+
+    header(
+        'Location: index.php?page=module2-staff'
+    );
+
+    exit;
+}
 
     public function myCollections(): void
     {

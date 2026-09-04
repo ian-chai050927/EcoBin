@@ -225,14 +225,45 @@ $filteredCollections = array_filter(
                         </div>
                     </div>
 
-                    <!-- MULTIPLE IMAGES -->
-                    <div class="col-12">
-                        <label class="form-label">Waste Images</label>
-                        <input class="form-control" type="file" id="wasteImages" name="waste_images[]"
-                               accept="image/jpeg, image/png, image/webp" multiple>
-                        <div class="form-text">Upload up to 5 JPG, PNG or WEBP images. Maximum 5MB per image.</div>
-                        <div id="imagePreview" class="d-flex flex-wrap gap-2 mt-3"></div>
-                    </div>
+                   <!-- WASTE IMAGE -->
+<div class="col-12">
+
+    <label class="form-label">
+        Waste Image
+    </label>
+
+    <div class="input-group">
+
+        <input
+            class="form-control"
+            type="file"
+            id="wasteImages"
+            name="waste_images[]"
+            accept="image/jpeg,image/png,image/webp"
+        >
+
+        <button
+            class="btn btn-outline-danger"
+            type="button"
+            id="removeWasteImage"
+            style="display:none;"
+        >
+            <i class="bi bi-x-circle"></i>
+            Remove
+        </button>
+
+    </div>
+
+    <div class="form-text">
+        Upload a JPG, PNG or WEBP image. Maximum 5MB.
+    </div>
+
+    <div
+        id="imagePreview"
+        class="mt-3"
+    ></div>
+
+</div>
 
                     <!-- ADDRESS -->
                     <div class="col-12">
@@ -250,7 +281,15 @@ $filteredCollections = array_filter(
                     <!-- MAP -->
                     <div class="col-12">
                         <label class="form-label">Select Location</label>
-                        <div id="map"></div>
+                        <div
+    id="map"
+    style="
+        height: 320px;
+        width: 100%;
+        border-radius: 12px;
+        border: 1px solid #dee2e6;
+    "
+></div>
                         <div class="form-text mt-2">Click the map or drag the marker to adjust the collection point.</div>
                     </div>
 
@@ -427,67 +466,241 @@ $filteredCollections = array_filter(
         setLocation(event.latlng.lat, event.latlng.lng);
     });
 
-    document.getElementById('currentLocationButton').addEventListener('click', function () {
+document
+    .getElementById('currentLocationButton')
+    .addEventListener('click', function () {
 
         if (!navigator.geolocation) {
-            alert('Geolocation is not supported by your browser.');
+
+            alert(
+                'Your browser does not support location services. ' +
+                'Please select your location manually on the map.'
+            );
+
             return;
         }
 
+
+        const button = this;
+
+        const originalText =
+            button.innerHTML;
+
+
+        button.disabled = true;
+
+        button.innerHTML =
+            '<i class="bi bi-hourglass-split"></i> Locating...';
+
+
         navigator.geolocation.getCurrentPosition(
+
             function (position) {
-                setLocation(position.coords.latitude, position.coords.longitude);
+
+                const latitude =
+                    position.coords.latitude;
+
+                const longitude =
+                    position.coords.longitude;
+
+
+                setLocation(
+                    latitude,
+                    longitude
+                );
+
+
+                button.disabled = false;
+
+                button.innerHTML =
+                    '<i class="bi bi-check-circle"></i> Location Found';
+
             },
-            function () {
-                alert('Unable to access your current location.');
+
+
+            function (error) {
+
+                button.disabled = false;
+
+                button.innerHTML =
+                    originalText;
+
+
+                let message =
+                    'Unable to get your current location. ';
+
+
+                switch (error.code) {
+
+                    case error.PERMISSION_DENIED:
+
+                        message +=
+                            'Location permission was denied. ' +
+                            'Please allow location access in your browser, ' +
+                            'or select the location manually on the map.';
+
+                        break;
+
+
+                    case error.POSITION_UNAVAILABLE:
+
+                        message +=
+                            'Your location is currently unavailable. ' +
+                            'Please select it manually on the map.';
+
+                        break;
+
+
+                    case error.TIMEOUT:
+
+                        message +=
+                            'Location request timed out. ' +
+                            'Please try again or select the location manually.';
+
+                        break;
+
+
+                    default:
+
+                        message +=
+                            'Please select the location manually on the map.';
+
+                }
+
+
+                alert(message);
+
+            },
+
+
+            {
+                enableHighAccuracy: true,
+                timeout: 10000,
+                maximumAge: 0
             }
+
         );
+
     });
 
 
     /*
-    |--------------------------------------------------------------------------
-    | IMAGE PREVIEW
-    |--------------------------------------------------------------------------
-    */
+|--------------------------------------------------------------------------
+| IMAGE PREVIEW + REMOVE
+|--------------------------------------------------------------------------
+*/
 
-    const wasteImages = document.getElementById('wasteImages');
-    const preview = document.getElementById('imagePreview');
+const wasteImages =
+    document.getElementById('wasteImages');
 
-    wasteImages.addEventListener('change', function () {
+const imagePreview =
+    document.getElementById('imagePreview');
 
-        preview.innerHTML = '';
+const removeWasteImage =
+    document.getElementById('removeWasteImage');
 
-        const files = Array.from(this.files);
 
-        if (files.length > 5) {
-            alert('Maximum 5 images are allowed.');
-            this.value = '';
+wasteImages.addEventListener(
+    'change',
+    function () {
+
+        imagePreview.innerHTML = '';
+
+        if (this.files.length === 0) {
+
+            removeWasteImage.style.display =
+                'none';
+
             return;
         }
 
-        files.forEach(function (file) {
+        const file =
+            this.files[0];
 
-            if (!file.type.startsWith('image/')) {
-                return;
-            }
 
-            const reader = new FileReader();
+        if (
+            ![
+                'image/jpeg',
+                'image/png',
+                'image/webp'
+            ].includes(file.type)
+        ) {
 
-            reader.onload = function (event) {
-                const image = document.createElement('img');
-                image.src = event.target.result;
-                image.style.width = '90px';
-                image.style.height = '90px';
-                image.style.objectFit = 'cover';
-                image.style.borderRadius = '12px';
-                image.style.border = '1px solid #e5ebe7';
-                preview.appendChild(image);
+            alert(
+                'Only JPG, PNG or WEBP images are allowed.'
+            );
+
+            this.value = '';
+
+            removeWasteImage.style.display =
+                'none';
+
+            return;
+        }
+
+
+        if (
+            file.size >
+            5 * 1024 * 1024
+        ) {
+
+            alert(
+                'Image must be 5MB or smaller.'
+            );
+
+            this.value = '';
+
+            removeWasteImage.style.display =
+                'none';
+
+            return;
+        }
+
+
+        const reader =
+            new FileReader();
+
+
+        reader.onload =
+            function (event) {
+
+                imagePreview.innerHTML = `
+                    <img
+                        src="${event.target.result}"
+                        alt="Waste image preview"
+                        style="
+                            width:140px;
+                            height:140px;
+                            object-fit:cover;
+                            border-radius:12px;
+                            border:1px solid #dee2e6;
+                        "
+                    >
+                `;
+
             };
 
-            reader.readAsDataURL(file);
-        });
 
-    });
+        reader.readAsDataURL(file);
+
+
+        removeWasteImage.style.display =
+            'block';
+    }
+);
+
+
+removeWasteImage.addEventListener(
+    'click',
+    function () {
+
+        wasteImages.value = '';
+
+        imagePreview.innerHTML = '';
+
+        this.style.display =
+            'none';
+    }
+);
 
 </script>
