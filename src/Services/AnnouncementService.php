@@ -1,8 +1,15 @@
 <?php
+/*
+ * @author EcoBin Team — Module 5 (Notifications & System)
+ * Service for managing Announcement records.
+ * Uses the ORM $author association instead of a raw createdBy integer.
+ */
+
 namespace EcoBin\Services;
 
 use Doctrine\ORM\EntityManagerInterface;
 use EcoBin\Entities\Announcement;
+use EcoBin\Entities\User;
 
 class AnnouncementService
 {
@@ -17,16 +24,22 @@ class AnnouncementService
 
     public function create(string $title, string $message, int $createdBy): Announcement
     {
-        $title = trim($title);
+        $title   = trim($title);
         $message = trim($message);
         if ($title === '' || $message === '') {
             throw new \InvalidArgumentException('Title and message are required.');
         }
 
         $a = new Announcement();
-        $a->title = mb_substr($title, 0, 150);
+        $a->title   = mb_substr($title, 0, 150);
         $a->message = mb_substr($message, 0, 4000);
-        $a->createdBy = $createdBy;
+
+        /*
+         * ORM RELATIONSHIP USAGE:
+         * Assign the author (User) via getReference() so Doctrine writes the
+         * created_by FK column on flush without loading the full User entity.
+         */
+        $a->author = $this->em->getReference(User::class, $createdBy);
 
         $this->em->persist($a);
         $this->em->flush();

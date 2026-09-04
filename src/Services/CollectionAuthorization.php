@@ -1,4 +1,10 @@
 <?php
+/*
+ * @author EcoBin Team — Module 2 (Waste Collection)
+ * Authorization helper for CollectionRequest ownership checks.
+ * Uses ORM associations ($collection->resident, $collection->collectionStaff)
+ * instead of raw integer FK fields.
+ */
 
 namespace EcoBin\Services;
 
@@ -25,8 +31,12 @@ class CollectionAuthorization
         }
 
 
+        /*
+         * Compare via ORM association: $collection->resident is a User object.
+         * We compare its ID against the session user ID.
+         */
         if (
-            $collection->residentId
+            $collection->resident->id
             !==
             (int)
             $_SESSION[
@@ -49,9 +59,11 @@ class CollectionAuthorization
         CollectionRequest $collection
     ): void {
 
+        /*
+         * $collection->collectionStaff is a User object (or null if unassigned).
+         */
         if (
-            $collection
-                ->collectionStaffId
+            ($collection->collectionStaff?->id)
             !==
             (int)
             $_SESSION[

@@ -1,4 +1,5 @@
 <?php
+
 namespace EcoBin\Controllers;
 
 use EcoBin\Services\Security;
@@ -6,6 +7,7 @@ use EcoBin\Services\NotificationService;
 use EcoBin\Services\AnnouncementService;
 use EcoBin\Services\SystemConfigService;
 use EcoBin\Services\AuditLogService;
+use EcoBin\Services\InternalApiClient;
 
 class SystemController
 {
@@ -14,7 +16,8 @@ class SystemController
         private AnnouncementService $announcements,
         private SystemConfigService $config,
         private AuditLogService $auditLog,
-        private $dispatcher
+        private $dispatcher,
+        private array $app = []
     ) {}
 
     public function notifications(): void
@@ -41,12 +44,26 @@ class SystemController
     public function admin(): void
     {
         Security::requireRole(['Admin']);
+
+
+        $liveStats = null;
+        if (!empty($this->app['base_url']) && !empty($this->app['service_token'])) {
+            $client    = new InternalApiClient($this->app['base_url'], $this->app['service_token']);
+            $response  = $client->call('dashboard.stats', []);
+            if (($response['status'] ?? null) === 'SUCCESS') {
+                $liveStats = $response['data'] ?? null;
+            } else {
+                error_log('Module 5: dashboard.stats service unavailable — ' . ($response['error'] ?? 'unknown'));
+            }
+        }
+
         view('module5/admin', [
-            'title' => 'Notification & System Administration',
+            'title'         => 'Notification & System Administration',
             'announcements' => $this->announcements->listAll(),
-            'configs' => $this->config->listAll(),
-            'audits' => $this->auditLog->recentAuditLogs(),
-            'activities' => $this->auditLog->recentActivityLogs(),
+            'configs'       => $this->config->listAll(),
+            'audits'        => $this->auditLog->recentAuditLogs(),
+            'activities'    => $this->auditLog->recentActivityLogs(),
+            'liveStats'     => $liveStats,
         ]);
     }
 

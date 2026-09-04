@@ -54,19 +54,17 @@ $filteredCollections = array_filter(
                 return true;
             }
 
-            $report = null;
-            foreach ($reports as $r) {
-                if ($r->id === $collection->wasteReportId) {
-                    $report = $r;
-                    break;
-                }
-            }
+            /*
+             * ORM RELATIONSHIP USAGE:
+             * Access wasteReport details through the ORM association directly.
+             */
+            $report = $collection->wasteReport;
 
             $haystack = strtolower(
                     $collection->id . ' '
-                    . ($report->category ?? '') . ' '
-                    . ($report->address ?? '') . ' '
-                    . ($report->description ?? '') . ' '
+                    . ($report?->category ?? '') . ' '
+                    . ($report?->address ?? '') . ' '
+                    . ($report?->description ?? '') . ' '
                     . $collection->status
             );
 

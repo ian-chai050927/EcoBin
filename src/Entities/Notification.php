@@ -1,4 +1,10 @@
 <?php
+/*
+ * @author EcoBin Team — Module 5 (Notifications & System)
+ * Entity mapped to notifications table via Doctrine ORM.
+ * The user relationship uses ManyToOne to User.
+ */
+
 namespace EcoBin\Entities;
 
 use Doctrine\ORM\Mapping as ORM;
@@ -10,8 +16,14 @@ class Notification
     #[ORM\Id, ORM\GeneratedValue, ORM\Column(type: 'integer')]
     public ?int $id = null;
 
-    #[ORM\Column(name: 'user_id', type: 'integer')]
-    public int $userId;
+    /*
+    |--------------------------------------------------------------------------
+    | ORM Relationship: Notification belongs to one User
+    |--------------------------------------------------------------------------
+    */
+    #[ORM\ManyToOne(targetEntity: User::class)]
+    #[ORM\JoinColumn(name: 'user_id', referencedColumnName: 'id', nullable: false)]
+    public User $user;
 
     #[ORM\Column(length: 120)]
     public string $title;

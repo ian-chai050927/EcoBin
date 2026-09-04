@@ -1,4 +1,5 @@
 <?php
+
 namespace EcoBin\Controllers;
 
 use Doctrine\ORM\EntityManagerInterface;
@@ -448,35 +449,6 @@ class AuthController
     public function changeStatus(): void
     {
         $this->updateUser();
-    }
-
-    public function apiUserStatus(): void
-    {
-        header('Content-Type: application/json');
-        
-        // IFA Mandatory Request Requirement: Tracking ID
-        $requestID = $_GET['requestID'] ?? uniqid();
-        $email = $_GET['email'] ?? '';
-
-        $user = $this->em->getRepository(User::class)->findOneBy(['email' => $email]);
-
-        // IFA Mandatory Response Requirement: Status and Timestamp
-        $response = [
-            'requestID' => $requestID,
-            'timeStamp' => (new \DateTime())->format('Y-m-d H:i:s'),
-            'status'    => $user ? 'S' : 'F',
-        ];
-
-        if ($user) {
-            $response['userDetails'] = [
-                'name'   => $user->name,
-                'role'   => $user->role,
-                'status' => $user->status
-            ];
-        }
-
-        echo json_encode($response);
-        exit;
     }
 
 }

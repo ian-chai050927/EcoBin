@@ -1,4 +1,9 @@
 <?php
+/*
+ * @author EcoBin Team — Shared front controller / router
+ * Routes every ?page= request to the correct Controller method.
+ * Bootstraps Doctrine ORM, EventDispatcher and all services.
+ */
 declare(strict_types=1);
 
 use EcoBin\Controllers\AuthController;
@@ -41,7 +46,8 @@ $system = new SystemController(
     $announcementService,
     $configService,
     $auditLogService,
-    $dispatcher
+    $dispatcher,
+    $app          // passed so SystemController can call InternalApiClient
 );
 
 $page = $_GET['page'] ?? 'home';
@@ -58,7 +64,6 @@ switch ($page) {
     case 'user-status': $auth->changeStatus(); break;
     case 'user-create': $auth->createUser(); break;
     case 'user-update': $auth->updateUser(); break;
-    case 'api-user-status': $auth->apiUserStatus(); break;
     case 'my-collections':$waste->myCollections();break;
 
     case 'module2':

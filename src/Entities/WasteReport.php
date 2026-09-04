@@ -1,9 +1,12 @@
 <?php
+/*
+ * @author EcoBin Team — Module 2 (Waste Collection)
+ * Entity class mapped to the waste_reports table via Doctrine ORM.
+ */
 
 namespace EcoBin\Entities;
 
 use Doctrine\ORM\Mapping as ORM;
-
 
 #[ORM\Entity]
 #[ORM\Table(name: 'waste_reports')]
@@ -15,11 +18,17 @@ class WasteReport
     public ?int $id = null;
 
 
-    #[ORM\Column(
-        name: 'resident_id',
-        type: 'integer'
-    )]
-    public int $residentId;
+    /*
+    |--------------------------------------------------------------------------
+    | ORM Relationship: WasteReport belongs to one User (Resident)
+    |--------------------------------------------------------------------------
+    | Doctrine maps this to the resident_id FK column via the JoinColumn.
+    | The application works with the User object directly; Doctrine manages
+    | the FK column transparently.
+    */
+    #[ORM\ManyToOne(targetEntity: User::class)]
+    #[ORM\JoinColumn(name: 'resident_id', referencedColumnName: 'id', nullable: false)]
+    public User $resident;
 
 
     #[ORM\Column(
@@ -162,5 +171,14 @@ class WasteReport
     {
         $this->createdAt =
             new \DateTime();
+    }
+
+    /**
+     * Convenience getter — returns the resident's integer ID from the
+     * ORM association. Avoids breaking code that needs the raw FK value.
+     */
+    public function getResidentId(): ?int
+    {
+        return $this->resident->id ?? null;
     }
 }

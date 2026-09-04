@@ -1,8 +1,10 @@
 <?php
+
 namespace EcoBin\Services;
 
 use Doctrine\ORM\EntityManagerInterface;
 use EcoBin\Entities\ActivityLog;
+use EcoBin\Entities\User;
 use RuntimeException;
 
 class RateLimiter
@@ -16,7 +18,7 @@ class RateLimiter
 
     /**
      * Check if the user has exceeded the rate limit.
-     * Logs the activity if under the limit.
+     * Logs the activity via the ORM if under the limit.
      *
      * @param int $userId
      * @param string $action
@@ -32,9 +34,9 @@ class RateLimiter
         $sql = "SELECT COUNT(*) FROM activity_logs WHERE user_id = :user_id AND activity = :activity AND created_at >= DATE_SUB(NOW(), INTERVAL :seconds SECOND)";
         $stmt = $conn->prepare($sql);
         $result = $stmt->executeQuery([
-            'user_id' => $userId,
+            'user_id'  => $userId,
             'activity' => $action,
-            'seconds' => $timeframeSeconds
+            'seconds'  => $timeframeSeconds
         ]);
         
         $count = (int)$result->fetchOne();
@@ -42,10 +44,9 @@ class RateLimiter
         if ($count >= $maxAttempts) {
             throw new RuntimeException("Rate limit exceeded for action: {$action}. Please try again later.");
         }
-        
-        // Log the activity
+
         $log = new ActivityLog();
-        $log->userId = $userId;
+        $log->user     = $this->em->getReference(User::class, $userId);
         $log->activity = $action;
         $this->em->persist($log);
         $this->em->flush();

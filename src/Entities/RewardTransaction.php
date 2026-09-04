@@ -1,4 +1,10 @@
 <?php
+/*
+ * @author EcoBin Team — Module 3 (Recycling & Rewards)
+ * Entity mapped to reward_transactions table via Doctrine ORM.
+ * The user relationship uses ManyToOne to User.
+ */
+
 namespace EcoBin\Entities;
 
 use Doctrine\ORM\Mapping as ORM;
@@ -10,8 +16,14 @@ class RewardTransaction
     #[ORM\Id, ORM\GeneratedValue, ORM\Column(type: 'integer')]
     public ?int $id = null;
 
-    #[ORM\Column(name: 'user_id', type: 'integer')]
-    public int $userId;
+    /*
+    |--------------------------------------------------------------------------
+    | ORM Relationship: RewardTransaction belongs to one User
+    |--------------------------------------------------------------------------
+    */
+    #[ORM\ManyToOne(targetEntity: User::class)]
+    #[ORM\JoinColumn(name: 'user_id', referencedColumnName: 'id', nullable: false)]
+    public User $user;
 
     #[ORM\Column(type: 'integer')]
     public int $points;

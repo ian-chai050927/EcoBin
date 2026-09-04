@@ -31,21 +31,15 @@ function waitingSince(\DateTime $createdAt): string
     return 'Just submitted';
 }
 
-$pending = array_filter($collections, fn($c) => !$c->collectionStaffId);
-$assigned = array_filter($collections, fn($c) => (bool) $c->collectionStaffId);
+$pending  = array_filter($collections, fn($c) => !$c->collectionStaff);
+$assigned = array_filter($collections, fn($c) => (bool) $c->collectionStaff);
 
-// $staff comes back as a flat list from the repository — build a
-// lookup so the "assigned" cards can show the crew member's name.
-$staffById = [];
-foreach ($staff as $s) {
-    $staffById[$s->id] = $s;
-}
 
-usort($pending, function ($a, $b) use ($reports) {
-    $ra = $reports[$a->wasteReportId] ?? null;
-    $rb = $reports[$b->wasteReportId] ?? null;
-    $weightA = priorityWeight($ra->priority ?? null);
-    $weightB = priorityWeight($rb->priority ?? null);
+usort($pending, function ($a, $b) {
+    $ra = $a->wasteReport;
+    $rb = $b->wasteReport;
+    $weightA = priorityWeight($ra?->priority ?? null);
+    $weightB = priorityWeight($rb?->priority ?? null);
     return $weightA <=> $weightB ?: $a->createdAt <=> $b->createdAt;
 });
 
@@ -62,7 +56,7 @@ usort($pending, function ($a, $b) use ($reports) {
     </div>
 
     <div class="row g-3 mb-5">
-        <?php foreach ($pending as $c): $r = $reports[$c->wasteReportId] ?? null; $resident = $residents[$c->residentId] ?? null; ?>
+        <?php foreach ($pending as $c): $r = $c->wasteReport; $resident = $c->resident; ?>
 
             <div class="col-lg-6">
                 <div class="eco-card collection-card-<?= strtolower($r?->priority ?? 'normal') ?>">
@@ -119,7 +113,7 @@ usort($pending, function ($a, $b) use ($reports) {
     <h5 class="mb-3">In Progress &amp; Scheduled</h5>
 
     <div class="row g-3">
-        <?php foreach ($assigned as $c): $r = $reports[$c->wasteReportId] ?? null; $resident = $residents[$c->residentId] ?? null; $s = $staffById[$c->collectionStaffId] ?? null; ?>
+        <?php foreach ($assigned as $c): $r = $c->wasteReport; $resident = $c->resident; $s = $c->collectionStaff; ?>
 
             <div class="col-lg-6">
                 <div class="eco-card-flat">
@@ -131,7 +125,7 @@ usort($pending, function ($a, $b) use ($reports) {
 
                     <div class="small">
                         <?= Security::e($resident?->name ?? '') ?> · <?= Security::e($r?->category ?? '') ?><br>
-                        Crew: <?= Security::e($s?->name ?? 'Staff #' . $c->collectionStaffId) ?> ·
+                        Crew: <?= Security::e($s?->name ?? 'Unassigned') ?> ·
                         Scheduled <?= $c->scheduledDate?->format('d M') ?>
                     </div>
 

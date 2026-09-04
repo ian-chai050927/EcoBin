@@ -1,4 +1,5 @@
 <?php
+
 namespace EcoBin\Controllers;
 
 use Doctrine\ORM\EntityManagerInterface;
@@ -22,11 +23,17 @@ class RecyclingController
     {
         Security::requireRole(['Resident']);
         $uid = (int)$_SESSION['user_id'];
-        $centers = $this->em->getRepository(RecyclingCenter::class)->findBy([], ['name'=>'ASC']);
-        $subs = $this->em->getRepository(RecyclingSubmission::class)->findBy(['residentId'=>$uid], ['id'=>'DESC']);
-        $appts = $this->em->getRepository(RecyclingAppointment::class)->findBy(['residentId'=>$uid], ['id'=>'DESC']);
-        $rewards = $this->em->getRepository(RewardTransaction::class)->findBy(['userId'=>$uid], ['id'=>'DESC']);
-        $balance = array_sum(array_map(fn($r)=>$r->points, $rewards));
+
+        /*
+         * ORM RELATIONSHIP USAGE:
+         * findBy with 'resident' maps to the ManyToOne association; Doctrine
+         * translates it to WHERE resident_id = :uid automatically.
+         */
+        $centers = $this->em->getRepository(RecyclingCenter::class)->findBy([], ['name' => 'ASC']);
+        $subs    = $this->em->getRepository(RecyclingSubmission::class)->findBy(['resident' => $uid], ['id' => 'DESC']);
+        $appts   = $this->em->getRepository(RecyclingAppointment::class)->findBy(['resident' => $uid], ['id' => 'DESC']);
+        $rewards = $this->em->getRepository(RewardTransaction::class)->findBy(['user' => $uid], ['id' => 'DESC']);
+        $balance = array_sum(array_map(fn($r) => $r->points, $rewards));
 
         // Calculate total weight and badges
         $totalWeight = array_sum(array_map(fn($s) => $s->status === 'Approved' ? (float)$s->weightKg : 0, $subs));
@@ -35,32 +42,38 @@ class RecyclingController
         if ($totalWeight >= 10) $badges[] = 'Green Warrior';
         if ($totalWeight >= 50) $badges[] = 'Recycling Master';
 
-        // Fetch Leaderboard (top 10 residents by points earned)
-        $conn = $this->em->getConnection();
-        $sql = "SELECT u.name, SUM(r.points) as total_earned FROM reward_transactions r JOIN users u ON r.user_id = u.id WHERE r.type = 'Earn' GROUP BY u.id ORDER BY total_earned DESC LIMIT 10";
-        $stmt = $conn->prepare($sql);
+        // Leaderboard (top 10 by points earned)
+        $conn   = $this->em->getConnection();
+        $sql    = "SELECT u.name, SUM(r.points) as total_earned FROM reward_transactions r JOIN users u ON r.user_id = u.id WHERE r.type = 'Earn' GROUP BY u.id ORDER BY total_earned DESC LIMIT 10";
+        $stmt   = $conn->prepare($sql);
         $result = $stmt->executeQuery();
         $leaderboard = $result->fetchAllAssociative();
 
-        view('module3/resident', compact('centers','subs','appts','rewards','balance','totalWeight','badges','leaderboard') + ['title'=>'Recycling & Rewards']);
+        view('module3/resident', compact('centers', 'subs', 'appts', 'rewards', 'balance', 'totalWeight', 'badges', 'leaderboard') + ['title' => 'Recycling & Rewards']);
     }
 
     public function submit(): void
     {
         Security::requireRole(['Resident']); Security::verifyCsrf();
+
         $center = $this->em->find(RecyclingCenter::class, (int)($_POST['center_id'] ?? 0));
         $weight = (float)($_POST['weight_kg'] ?? 0);
         if (!$center || $center->availability !== 'Open' || $weight <= 0) exit('Invalid submission.');
 
-        $s = new RecyclingSubmission();
-        $s->residentId = (int)$_SESSION['user_id'];
-        $s->centerId = $center->id;
-        $s->material = mb_substr(trim($_POST['material'] ?? ''),0,80);
+        /*
+         * ORM RELATIONSHIP USAGE:
+         * Assign $s->resident and $s->center as object associations.
+         * Doctrine writes resident_id and center_id FK columns on flush.
+         */
+        $s         = new RecyclingSubmission();
+        $s->resident = $this->em->getReference(User::class, (int)$_SESSION['user_id']);
+        $s->center   = $center;
+        $s->material = mb_substr(trim($_POST['material'] ?? ''), 0, 80);
         $s->weightKg = number_format($weight, 2, '.', '');
         $this->em->persist($s); $this->em->flush();
 
-        $this->dispatcher->dispatch('recycling.submitted', ['entity'=>'RecyclingSubmission','entity_id'=>$s->id]);
-        Security::flash('success','Recycling submission recorded for operator review.');
+        $this->dispatcher->dispatch('recycling.submitted', ['entity' => 'RecyclingSubmission', 'entity_id' => $s->id]);
+        Security::flash('success', 'Recycling submission recorded for operator review.');
         header('Location: index.php?page=module3'); exit;
     }
 
@@ -79,14 +92,18 @@ class RecyclingController
         $center = $this->em->find(RecyclingCenter::class, (int)($_POST['center_id'] ?? 0));
         if (!$center || $center->availability !== 'Open') exit('Center unavailable.');
 
-        $a = new RecyclingAppointment();
-        $a->residentId = (int)$_SESSION['user_id'];
-        $a->centerId = $center->id;
+        /*
+         * ORM RELATIONSHIP USAGE:
+         * Assign $a->resident and $a->center as object associations.
+         */
+        $a           = new RecyclingAppointment();
+        $a->resident = $this->em->getReference(User::class, (int)$_SESSION['user_id']);
+        $a->center   = $center;
         $a->appointmentAt = new \DateTime($_POST['appointment_at']);
         $this->em->persist($a); $this->em->flush();
 
-        $this->dispatcher->dispatch('recycling.appointment_created', ['entity'=>'RecyclingAppointment','entity_id'=>$a->id]);
-        Security::flash('success','Appointment requested.');
+        $this->dispatcher->dispatch('recycling.appointment_created', ['entity' => 'RecyclingAppointment', 'entity_id' => $a->id]);
+        Security::flash('success', 'Appointment requested.');
         header('Location: index.php?page=module3'); exit;
     }
 
@@ -94,34 +111,38 @@ class RecyclingController
     {
         Security::requireRole(['Recycling Center Operator']);
         $uid = (int)$_SESSION['user_id'];
-        $centers = $this->em->getRepository(RecyclingCenter::class)->findBy(['operatorId'=>$uid]);
-        $centerIds = array_map(fn($c)=>$c->id, $centers);
 
-        $subs = [];
+
+        $centers   = $this->em->getRepository(RecyclingCenter::class)->findBy(['operator' => $uid]);
+        $centerIds = array_map(fn($c) => $c->id, $centers);
+
+        $subs  = [];
         $appts = [];
         foreach ($centerIds as $id) {
-            $subs = array_merge($subs, $this->em->getRepository(RecyclingSubmission::class)->findBy(['centerId'=>$id], ['id'=>'DESC']));
-            $appts = array_merge($appts, $this->em->getRepository(RecyclingAppointment::class)->findBy(['centerId'=>$id], ['id'=>'DESC']));
+            $subs  = array_merge($subs,  $this->em->getRepository(RecyclingSubmission::class)->findBy(['center' => $id], ['id' => 'DESC']));
+            $appts = array_merge($appts, $this->em->getRepository(RecyclingAppointment::class)->findBy(['center' => $id], ['id' => 'DESC']));
         }
-        view('module3/operator', compact('centers','subs','appts') + ['title'=>'Recycling Centre Operator']);
+        view('module3/operator', compact('centers', 'subs', 'appts') + ['title' => 'Recycling Centre Operator']);
     }
 
     public function centerSave(): void
     {
         Security::requireRole(['Recycling Center Operator']); Security::verifyCsrf();
         $id = (int)($_POST['id'] ?? 0);
-        $c = $id ? $this->em->find(RecyclingCenter::class, $id) : new RecyclingCenter();
-        if ($id && (!$c || $c->operatorId !== (int)$_SESSION['user_id'])) exit('Forbidden');
+        $c  = $id ? $this->em->find(RecyclingCenter::class, $id) : new RecyclingCenter();
 
-        $c->operatorId = (int)$_SESSION['user_id'];
-        $c->name = mb_substr(trim($_POST['name']),0,120);
-        $c->address = mb_substr(trim($_POST['address']),0,500);
-        $c->acceptedMaterials = mb_substr(trim($_POST['accepted_materials']),0,255);
-        $c->availability = in_array($_POST['availability'] ?? '', ['Open','Full','Closed'], true) ? $_POST['availability'] : 'Open';
+
+        if ($id && (!$c || $c->operator->id !== (int)$_SESSION['user_id'])) exit('Forbidden');
+
+        $c->operator          = $this->em->getReference(User::class, (int)$_SESSION['user_id']);
+        $c->name              = mb_substr(trim($_POST['name']), 0, 120);
+        $c->address           = mb_substr(trim($_POST['address']), 0, 500);
+        $c->acceptedMaterials = mb_substr(trim($_POST['accepted_materials']), 0, 255);
+        $c->availability      = in_array($_POST['availability'] ?? '', ['Open', 'Full', 'Closed'], true) ? $_POST['availability'] : 'Open';
         $this->em->persist($c); $this->em->flush();
 
-        $this->dispatcher->dispatch('recycling.center_saved', ['entity'=>'RecyclingCenter','entity_id'=>$c->id]);
-        Security::flash('success','Recycling centre information saved.');
+        $this->dispatcher->dispatch('recycling.center_saved', ['entity' => 'RecyclingCenter', 'entity_id' => $c->id]);
+        Security::flash('success', 'Recycling centre information saved.');
         header('Location: index.php?page=module3-operator'); exit;
     }
 
@@ -130,33 +151,38 @@ class RecyclingController
         Security::requireRole(['Recycling Center Operator']); Security::verifyCsrf();
         $s = $this->em->find(RecyclingSubmission::class, (int)$_POST['submission_id']);
         if (!$s) exit('Not found');
-        $center = $this->em->find(RecyclingCenter::class, $s->centerId);
-        if (!$center || $center->operatorId !== (int)$_SESSION['user_id']) exit('Forbidden');
+
+
+        if (!$s->center || $s->center->operator->id !== (int)$_SESSION['user_id']) exit('Forbidden');
 
         $status = $_POST['status'] ?? '';
-        if (!in_array($status, ['Approved','Rejected'], true)) exit('Invalid');
+        if (!in_array($status, ['Approved', 'Rejected'], true)) exit('Invalid');
 
         $s->status = $status;
         if ($status === 'Approved' && $s->points === 0) {
             $configService = new \EcoBin\Services\SystemConfigService($this->em);
-            $defaultRate = (int)($configService->get('recycling.points_per_kg') ?? 5);
+            $defaultRate   = (int)($configService->get('recycling.points_per_kg') ?? 5);
+
+ 
             $strategy = \EcoBin\Services\RewardStrategy\RewardContext::getStrategy($s->material, $defaultRate);
             $s->points = $strategy->calculate((float)$s->weightKg);
-            $r = new RewardTransaction();
-            $r->userId = $s->residentId;
-            $r->points = $s->points;
-            $r->type = 'Earn';
+
+
+            $r              = new RewardTransaction();
+            $r->user        = $s->resident;
+            $r->points      = $s->points;
+            $r->type        = 'Earn';
             $r->description = 'Recycling submission #' . $s->id;
             $this->em->persist($r);
         }
         $this->em->flush();
 
         if ($status === 'Approved') {
-            $this->dispatcher->dispatch('recycling.approved', ['entity'=>'RecyclingSubmission','entity_id'=>$s->id,'user_id'=>$s->residentId]);
+            $this->dispatcher->dispatch('recycling.approved', ['entity' => 'RecyclingSubmission', 'entity_id' => $s->id, 'user_id' => $s->resident->id]);
         } else {
-            $this->dispatcher->dispatch('recycling.rejected', ['entity'=>'RecyclingSubmission','entity_id'=>$s->id]);
+            $this->dispatcher->dispatch('recycling.rejected', ['entity' => 'RecyclingSubmission', 'entity_id' => $s->id]);
         }
-        Security::flash('success','Submission reviewed.');
+        Security::flash('success', 'Submission reviewed.');
         header('Location: index.php?page=module3-operator'); exit;
     }
 
@@ -165,18 +191,21 @@ class RecyclingController
         Security::requireRole(['Recycling Center Operator']); Security::verifyCsrf();
         $a = $this->em->find(RecyclingAppointment::class, (int)$_POST['appointment_id']);
         if (!$a) exit('Not found');
-        $center = $this->em->find(RecyclingCenter::class, $a->centerId);
-        if (!$center || $center->operatorId !== (int)$_SESSION['user_id']) exit('Forbidden');
+
+
+        if (!$a->center || $a->center->operator->id !== (int)$_SESSION['user_id']) exit('Forbidden');
 
         $status = $_POST['status'] ?? '';
-        if (!in_array($status, ['Confirmed','Completed','Cancelled'], true)) exit('Invalid');
+        if (!in_array($status, ['Confirmed', 'Completed', 'Cancelled'], true)) exit('Invalid');
         $a->status = $status; $this->em->flush();
 
         $this->dispatcher->dispatch('appointment.updated', [
-            'entity'=>'RecyclingAppointment','entity_id'=>$a->id,'user_id'=>$a->residentId,
-            'message'=>'Your recycling appointment is now ' . $status . '.'
+            'entity'    => 'RecyclingAppointment',
+            'entity_id' => $a->id,
+            'user_id'   => $a->resident->id,
+            'message'   => 'Your recycling appointment is now ' . $status . '.',
         ]);
-        Security::flash('success','Appointment updated.');
+        Security::flash('success', 'Appointment updated.');
         header('Location: index.php?page=module3-operator'); exit;
     }
 
@@ -187,23 +216,23 @@ class RecyclingController
 
         $limiter = new \EcoBin\Services\RateLimiter($this->em);
         try {
-            $limiter->checkAndLog($uid, 'module3.redeem', 5, 3600); // Max 5 redemptions per hour
+            $limiter->checkAndLog($uid, 'module3.redeem', 5, 3600);
         } catch (\RuntimeException $e) {
             Security::flash('danger', $e->getMessage());
             header('Location: index.php?page=module3'); exit;
         }
 
         $pointsToRedeem = (int)($_POST['points'] ?? 0);
-        $rewardName = trim($_POST['reward_name'] ?? 'Reward');
+        $rewardName     = trim($_POST['reward_name'] ?? 'Reward');
 
         if ($pointsToRedeem <= 0) exit('Invalid points.');
 
         $this->em->beginTransaction();
         try {
             $conn = $this->em->getConnection();
-            // Calculate current balance with pessimistic write lock (FOR UPDATE)
-            $sql = "SELECT SUM(points) FROM reward_transactions WHERE user_id = :uid FOR UPDATE";
-            $stmt = $conn->prepare($sql);
+            // Pessimistic write lock to prevent race conditions
+            $sql    = "SELECT SUM(points) FROM reward_transactions WHERE user_id = :uid FOR UPDATE";
+            $stmt   = $conn->prepare($sql);
             $result = $stmt->executeQuery(['uid' => $uid]);
             $balance = (int)$result->fetchOne();
 
@@ -211,11 +240,10 @@ class RecyclingController
                 throw new \Exception('Insufficient points. Balance: ' . $balance);
             }
 
-            // Deduct points
-            $r = new RewardTransaction();
-            $r->userId = $uid;
-            $r->points = -$pointsToRedeem;
-            $r->type = 'Redeem';
+            $r              = new RewardTransaction();
+            $r->user        = $this->em->getReference(User::class, $uid);
+            $r->points      = -$pointsToRedeem;
+            $r->type        = 'Redeem';
             $r->description = 'Redeemed: ' . mb_substr($rewardName, 0, 200);
             $this->em->persist($r);
             $this->em->flush();
@@ -225,7 +253,6 @@ class RecyclingController
                 $this->dispatcher->dispatch('reward.redeemed', ['user_id' => $uid, 'points' => $pointsToRedeem]);
             }
 
-
             $user = $this->em->find(User::class, $uid);
             if ($user && $user->email) {
                 $client = new InternalApiClient(
@@ -234,7 +261,7 @@ class RecyclingController
                 );
 
                 $emailResponse = $client->call('notification.email', [
-                    'email' => $user->email,
+                    'email'   => $user->email,
                     'subject' => 'EcoBin: Reward redemption receipt',
                     'message' => '<p>You redeemed <strong>' . $pointsToRedeem
                         . ' points</strong> for "' . htmlspecialchars($rewardName, ENT_QUOTES, 'UTF-8')
@@ -242,7 +269,6 @@ class RecyclingController
                 ]);
 
                 if (($emailResponse['status'] ?? null) === 'ERROR') {
-
                     error_log('Module 5 notification.email unavailable for redemption receipt: '
                         . ($emailResponse['error'] ?? 'unknown error'));
                 }

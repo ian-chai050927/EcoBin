@@ -1,4 +1,10 @@
 <?php
+/*
+ * @author EcoBin Team — Module 3 (Recycling & Rewards)
+ * Entity mapped to recycling_centers table via Doctrine ORM.
+ * The operator relationship uses ManyToOne to User.
+ */
+
 namespace EcoBin\Entities;
 
 use Doctrine\ORM\Mapping as ORM;
@@ -10,8 +16,14 @@ class RecyclingCenter
     #[ORM\Id, ORM\GeneratedValue, ORM\Column(type: 'integer')]
     public ?int $id = null;
 
-    #[ORM\Column(name: 'operator_id', type: 'integer')]
-    public int $operatorId;
+    /*
+    |--------------------------------------------------------------------------
+    | ORM Relationship: RecyclingCenter is managed by one User (Operator)
+    |--------------------------------------------------------------------------
+    */
+    #[ORM\ManyToOne(targetEntity: User::class)]
+    #[ORM\JoinColumn(name: 'operator_id', referencedColumnName: 'id', nullable: false)]
+    public User $operator;
 
     #[ORM\Column(length: 120)]
     public string $name;

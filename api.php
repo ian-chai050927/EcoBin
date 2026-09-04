@@ -1,4 +1,11 @@
 <?php
+/*
+ * @author EcoBin Team — Shared API Gateway (all modules expose services here)
+ * REST/JSON web-service endpoint protected by X-Service-Token.
+ * Each named 'service' corresponds to one module's exposed function.
+ * IFA-compliant: every request requires requestID + timestamp;
+ * every response includes status + timestamp.
+ */
 declare(strict_types=1);
 
 use EcoBin\Entities\CollectionRequest;
@@ -73,14 +80,52 @@ try {
             break;
 
         case 'notification.create':
+            $userId = (int)($payload['user_id'] ?? 0);
+            $notifMsg = mb_substr((string)($payload['message'] ?? ''), 0, 4000);
+            if ($userId <= 0 || $notifMsg === '') throw new RuntimeException('Invalid notification payload');
             $n = new Notification();
-            $n->userId = (int)($payload['user_id'] ?? 0);
-            $n->title = mb_substr((string)($payload['title'] ?? 'Notification'),0,120);
-            $n->message = mb_substr((string)($payload['message'] ?? ''),0,4000);
-            $n->type = mb_substr((string)($payload['type'] ?? 'System'),0,50);
-            if ($n->userId <= 0 || $n->message === '') throw new RuntimeException('Invalid notification payload');
+            /*
+             * ORM RELATIONSHIP USAGE:
+             * Assign the user association via getReference() — Doctrine writes
+             * the user_id FK column on flush without loading the User entity.
+             */
+            $n->user    = $em->getReference(\EcoBin\Entities\User::class, $userId);
+            $n->title   = mb_substr((string)($payload['title'] ?? 'Notification'), 0, 120);
+            $n->message = $notifMsg;
+            $n->type    = mb_substr((string)($payload['type'] ?? 'System'), 0, 50);
             $em->persist($n); $em->flush();
-            $data = ['notification_id'=>$n->id];
+            $data = ['notification_id' => $n->id];
+            break;
+
+        /*
+         * MODULE 3 — Recycling & Rewards
+         * Exposed service: recycling.status
+         * Returns the current status, material, weight and points for a
+         * recycling submission. Other modules can call this to confirm
+         * that a submission was processed and points awarded.
+         *
+         * IFA Request fields:
+         *   payload.submission_id  int  mandatory  The RecyclingSubmission ID
+         *
+         * IFA Response data fields:
+         *   submission_id  int     — the submission's ID
+         *   material       string  — recycled material type
+         *   weight_kg      string  — weight in kilograms
+         *   points         int     — points awarded (0 if not yet approved)
+         *   status         string  — Pending | Approved | Rejected
+         */
+        case 'recycling.status':
+            $submissionId = (int)($payload['submission_id'] ?? 0);
+            if ($submissionId <= 0) throw new RuntimeException('submission_id is required and must be a positive integer.');
+            $sub = $em->find(RecyclingSubmission::class, $submissionId);
+            if (!$sub) throw new RuntimeException('Recycling submission not found.');
+            $data = [
+                'submission_id' => $sub->id,
+                'material'      => $sub->material,
+                'weight_kg'     => $sub->weightKg,
+                'points'        => $sub->points,
+                'status'        => $sub->status,
+            ];
             break;
 
         case 'dashboard.stats':

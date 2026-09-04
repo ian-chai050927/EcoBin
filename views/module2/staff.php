@@ -22,7 +22,7 @@ $today = (new \DateTime())->format('Y-m-d');
 <?php else: ?>
 
     <div class="row g-3">
-        <?php foreach ($tasks as $c): $r = $reports[$c->wasteReportId] ?? null; $resident = $residents[$c->residentId] ?? null;
+        <?php foreach ($tasks as $c): $r = $c->wasteReport; $resident = $c->resident;
             $isToday = $c->scheduledDate && $c->scheduledDate->format('Y-m-d') === $today;
             ?>
 

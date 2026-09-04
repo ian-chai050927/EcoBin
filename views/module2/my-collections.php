@@ -40,7 +40,7 @@ $filteredCollections = array_filter(
             return true;
         }
 
-        $report = $reports[$collection->wasteReportId] ?? null;
+        $report = $collection->wasteReport;
 
         $haystack = strtolower(
             $collection->id . ' '
@@ -116,7 +116,7 @@ $filteredCollections = array_filter(
 <div class="row g-4">
 
     <?php foreach ($filteredCollections as $c):
-        $report = $reports[$c->wasteReportId] ?? null;
+        $report   = $c->wasteReport;
         $progress = collectionProgress($c->status);
         ?>
 
