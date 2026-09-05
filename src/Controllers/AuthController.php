@@ -46,8 +46,11 @@ class AuthController
             $_SESSION['role'] = $user->role;
 
             $this->dispatcher->dispatch('auth.login', [
-                'entity' => 'User',
-                'entity_id' => $user->id
+                'entity'    => 'User',
+                'entity_id' => $user->id,
+                'role'      => $user->role,   // e.g. Resident / Admin / Collection Staff / Operator
+                'name'      => $user->name,
+                'email'     => $user->email,
             ]);
 
             header('Location: index.php');
