@@ -152,10 +152,10 @@
                             </div>
 
                             <div class="col-md-2 d-flex gap-2">
-                                <a href="index.php?page=users" class="btn btn-outline-secondary w-100">Cancel</a>
+                                <a href="index.php?page=users" class="btn btn-outline-secondary w-100 d-flex justify-content-center align-items-center">Cancel</a>
                                 <button class="btn-eco w-100">Save</button>
                             </div>
-
+                            
                         </form>
 
                     </td>
