@@ -48,6 +48,15 @@
                 Passwords are stored using PHP password hashing, not reversible encryption.
             </p>
 
+            <div style="text-align: center; margin-top: 24px;">
+                <p style="color: #555; font-size: 14px; margin: 0;">
+                    Already have an account? 
+                    <a href="index.php?page=login" style="color: #1b7f4f; font-weight: 600; text-decoration: none;">
+                        Log in here.
+                    </a>
+                </p>
+            </div>
+
         </div>
     </div>
 
