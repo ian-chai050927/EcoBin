@@ -41,20 +41,33 @@ $filteredCollections = array_filter(
         }
 
         if ($search === '') {
-            return true;
-        }
+    return true;
+}
 
-        $report = $collection->wasteReport;
+$report = $collection->wasteReport;
 
-        $haystack = strtolower(
-            $collection->id . ' '
-            . ($report->category ?? '') . ' '
-            . ($report->address ?? '') . ' '
-            . ($report->description ?? '') . ' '
-            . $collection->status
-        );
+/*
+ * If search contains only numbers,
+ * treat it as an exact Request ID search.
+ */
+if (ctype_digit($search)) {
+    return (int)$collection->id === (int)$search;
+}
 
-        return str_contains($haystack, strtolower($search));
+/*
+ * Otherwise search text fields.
+ */
+$haystack = strtolower(
+    ($report->category ?? '') . ' '
+    . ($report->address ?? '') . ' '
+    . ($report->description ?? '') . ' '
+    . $collection->status
+);
+
+return str_contains(
+    $haystack,
+    strtolower($search)
+);
     }
 );
 
