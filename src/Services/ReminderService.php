@@ -31,7 +31,7 @@ class ReminderService
                 $this->dispatcher->dispatch('collection.reminder', [
                     'entity' => 'CollectionRequest',
                     'entity_id' => $c->id,
-                    'user_id' => $c->residentId,
+                    'user_id' => $c->resident->id,
                     'message' => 'Reminder: your waste collection is scheduled for '
                         . $c->scheduledDate->format('d M Y') . '.',
                 ]);
@@ -58,7 +58,7 @@ class ReminderService
                 $this->dispatcher->dispatch('appointment.reminder', [
                     'entity' => 'RecyclingAppointment',
                     'entity_id' => $a->id,
-                    'user_id' => $a->residentId,
+                    'user_id' => $a->resident->id,
                     'message' => 'Reminder: your recycling appointment is at '
                         . $a->appointmentAt->format('d M Y, H:i') . '.',
                 ]);

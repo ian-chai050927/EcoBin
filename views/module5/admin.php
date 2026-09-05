@@ -97,7 +97,7 @@
                     <?php foreach ($audits as $a): ?>
                         <tr>
                             <td class="eco-subheading" style="margin-bottom: 0;"><?= $a->createdAt->format('m-d H:i') ?></td>
-                            <td><?= $a->userId ?? '-' ?></td>
+                            <td><?= $a->user?->id ?? '-' ?></td>
                             <td><?= \EcoBin\Services\Security::e($a->action) ?></td>
                             <td><?= \EcoBin\Services\Security::e($a->entity) ?> #<?= $a->entityId ?? '' ?></td>
                         </tr>
@@ -117,7 +117,7 @@
                 <?php foreach ($activities as $a): ?>
                     <div class="border-bottom py-2">
                         <span class="eco-subheading" style="margin-bottom: 0;"><?= $a->createdAt->format('Y-m-d H:i:s') ?></span>
-                        · User <?= $a->userId ?? '-' ?>
+                        · User <?= $a->user?->id ?? '-' ?>
                         · <?= \EcoBin\Services\Security::e($a->activity) ?>
                     </div>
                 <?php endforeach; ?>
