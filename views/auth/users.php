@@ -1,3 +1,9 @@
+<?php
+/**
+ * Module 1: User Authentication and Role Management
+ * @author Chai Ee Yuan
+ */
+?>
 <div class="d-flex justify-content-between align-items-center mb-4">
 
     <div>

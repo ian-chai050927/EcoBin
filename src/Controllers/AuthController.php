@@ -1,5 +1,8 @@
 <?php
-
+/**
+ * Module 1: User Authentication and Role Management
+ * @author Chai Ee Yuan
+ */
 namespace EcoBin\Controllers;
 
 use Doctrine\ORM\EntityManagerInterface;

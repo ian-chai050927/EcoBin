@@ -1,3 +1,9 @@
+<?php
+/**
+ * Module 1: User Authentication and Role Management
+ * @author Chai Ee Yuan
+ */
+?>
 <div class="auth-shell">
 
     <!-- ======================================================

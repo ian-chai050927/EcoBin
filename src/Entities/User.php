@@ -1,11 +1,10 @@
 <?php
-/*
- * @author EcoBin Team — Module 1 (User Authentication & Management)
+/**
+ * @author Chai Ee Yuan
  * Entity class mapped to the users table via Doctrine ORM.
  * Inverse OneToMany associations are declared here for Doctrine metadata
  * completeness and for demonstrating ORM relationship navigation.
  */
-
 namespace EcoBin\Entities;
 
 use Doctrine\Common\Collections\ArrayCollection;
