@@ -11,47 +11,49 @@
             <i class="bi bi-recycle"></i> EcoBin
         </div>
 
-        <div class="auth-side-quote" style="margin-top: auto; margin-bottom: auto;">
-            Join the community. Report waste, schedule pickups, and earn rewards for recycling.
+        <div class="auth-side-quote">
+            Report waste, book collection, and earn points for what you recycle.
+        </div>
+
+        <div class="auth-side-stat">
+            <div>
+                <div class="auth-side-stat-num">4 roles</div>
+                <div class="auth-side-stat-label">Residents, staff, operators &amp; admins in one system</div>
+            </div>
         </div>
     </div>
 
     <div class="auth-form-panel">
         <div class="auth-form-box">
 
-            <h2 style="font-weight: 800; color: #1a1a2e; margin-bottom: 8px;">Create your account</h2>
-            <p style="color: #666; margin-bottom: 32px; font-size: 14px;">Resident registration — get started in under a minute.</p>
+            <h2>Create your account</h2>
+            <p class="eco-subheading">Resident registration — get started in under a minute.</p>
 
             <form method="post">
                 <input type="hidden" name="csrf_token" value="<?= \EcoBin\Services\Security::csrfToken() ?>">
 
-                <div style="margin-bottom: 16px;">
-                    <label style="display: block; font-size: 11px; text-transform: uppercase; color: #666; font-weight: 700; margin-bottom: 6px; letter-spacing: 0.5px;">Name</label>
-                    <input class="form-control" name="name" maxlength="100" required style="background-color: #edf2fc; border: none; padding: 12px 16px; border-radius: 4px; width: 100%;">
-                </div>
+                <label class="form-label">Name</label>
+                <input class="form-control mb-3" name="name" maxlength="100" required>
 
-                <div style="margin-bottom: 16px;">
-                    <label style="display: block; font-size: 11px; text-transform: uppercase; color: #666; font-weight: 700; margin-bottom: 6px; letter-spacing: 0.5px;">Email</label>
-                    <input class="form-control" type="email" name="email" required style="background-color: #edf2fc; border: none; padding: 12px 16px; border-radius: 4px; width: 100%;">
-                </div>
+                <label class="form-label">Email</label>
+                <input class="form-control mb-3" type="email" name="email" required>
 
-                <div style="margin-bottom: 24px;">
-                    <label style="display: block; font-size: 11px; text-transform: uppercase; color: #666; font-weight: 700; margin-bottom: 6px; letter-spacing: 0.5px;">Password</label>
-                    <input class="form-control" type="password" name="password" minlength="8" required style="background-color: #edf2fc; border: none; padding: 12px 16px; border-radius: 4px; width: 100%;">
-                </div>
+                <label class="form-label">Password</label>
+                <input class="form-control mb-3" type="password" name="password" minlength="8" required>
 
-                <button class="btn-eco" style="background-color: #1b7f4f; color: white; border: none; padding: 10px 24px; border-radius: 6px; font-weight: 600; cursor: pointer; margin-bottom: 24px;">
-                    Register &rarr;
-                </button>
+                <button class="btn-eco w-100">Register</button>
             </form>
 
-            <div style="margin-bottom: 24px;">
-                <a href="index.php?page=login" style="color: #333; font-size: 14px; text-decoration: none;">Log in</a>
-            </div>
+            <p class="eco-subheading small mt-3 mb-0">
+                Passwords are stored using PHP password hashing, not reversible encryption.
+            </p>
 
-            <div style="border-left: 2px solid #1b7f4f; padding-left: 12px;">
-                <p style="color: #666; font-size: 12px; margin: 0;">
-                    Passwords are stored using PHP password hashing, not reversible encryption.
+            <div style="text-align: center; margin-top: 24px;">
+                <p style="color: #555; font-size: 14px; margin: 0;">
+                    Already have an account? 
+                    <a href="index.php?page=login" style="color: #1b7f4f; font-weight: 600; text-decoration: none;">
+                        Log in here.
+                    </a>
                 </p>
             </div>
 

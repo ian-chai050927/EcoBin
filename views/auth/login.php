@@ -48,8 +48,13 @@
                 </button>
             </form>
 
-            <div class="auth-links">
-                <a href="index.php?page=register">Register</a>
+            <div style="margin-top: 24px; margin-bottom: 24px;">
+                <p style="color: #555; font-size: 14px; margin: 0;">
+                    Don't have an account? 
+                    <a href="index.php?page=register" style="color: #1b7f4f; font-weight: 600; text-decoration: none;">
+                        Register here.
+                    </a>
+                </p>
             </div>
 
             <div class="auth-note">
