@@ -1,9 +1,7 @@
 <?php
 /*
- * @author EcoBin Team — Module 2 (Waste Collection)
- * Entity class mapped to the collection_requests table via Doctrine ORM.
- * Relationships to User (resident, collectionStaff) and WasteReport are
- * expressed as ManyToOne ORM associations rather than raw FK integers.
+ * @author  Jordan Liew Yi Xiang
+ * @module  Module 2 — Waste Report & Collection Management
  */
 
 namespace EcoBin\Entities;

@@ -1,7 +1,7 @@
 <?php
 /*
- * @author EcoBin Team — Module 2 (Waste Collection)
- * Entity class mapped to the waste_reports table via Doctrine ORM.
+ * @author  Jordan Liew Yi Xiang
+ * @module  Module 2 — Waste Report & Collection Management
  */
 
 namespace EcoBin\Entities;

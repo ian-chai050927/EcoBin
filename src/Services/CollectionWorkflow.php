@@ -1,5 +1,10 @@
 <?php
 
+/*
+ * @author  Jordan Liew Yi Xiang
+ * @module  Module 2 — Waste Report & Collection Management
+ */
+
 namespace EcoBin\Services;
 
 use EcoBin\States\Collection\CollectionState;

@@ -1,9 +1,7 @@
 <?php
 /*
- * @author EcoBin Team — Module 2 (Waste Collection)
- * Authorization helper for CollectionRequest ownership checks.
- * Uses ORM associations ($collection->resident, $collection->collectionStaff)
- * instead of raw integer FK fields.
+ * @author  Jordan Liew Yi Xiang
+ * @module  Module 2 — Waste Report & Collection Management
  */
 
 namespace EcoBin\Services;
