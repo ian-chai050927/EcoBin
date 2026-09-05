@@ -6,6 +6,7 @@ use Doctrine\ORM\EntityManagerInterface;
 use EcoBin\Entities\User;
 use EcoBin\Services\Security;
 use EcoBin\Services\Mailer;
+use EcoBin\Services\InternalApiClient;
 use EcoBin\Factories\UserFactory;
 
 class AuthController
@@ -148,106 +149,155 @@ class AuthController
         exit;
     }
 
+
     public function forgot(): void
     {
-        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            Security::verifyCsrf();
-
-            $email = strtolower(trim($_POST['email'] ?? ''));
-
-            $user = $this->em->getRepository(User::class)
-                ->findOneBy(['email' => $email]);
-
-            if ($user) {
-                $user->resetToken = bin2hex(random_bytes(24));
-                $user->resetExpiresAt = new \DateTime('+30 minutes');
-
-                $this->em->flush();
-
-                $url = $this->app['base_url']
-                    . '/index.php?page=reset&token='
-                    . urlencode($user->resetToken);
-
-                // --- SERVICE CONSUMPTION (IFA COMPLIANT) ---
-                $request = [
-                    'requestID' => uniqid('req_', true),
-                    'timestamp' => (new \DateTime())->format('c'),
-                    'service'   => 'notification.email',
-                    'payload'   => [
-                        'email'   => $user->email,
-                        'subject' => 'EcoBin password reset',
-                        'message' => '<p>Click to reset your password: <a href="' . htmlspecialchars($url) . '">' . htmlspecialchars($url) . '</a></p>',
-                    ],
-                ];
-                $payload = json_encode($request);
-
-                $ch = curl_init($this->app['base_url'] . '/api.php');
-                curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-                curl_setopt($ch, CURLOPT_POST, true);
-                curl_setopt($ch, CURLOPT_POSTFIELDS, $payload);
-                curl_setopt($ch, CURLOPT_HTTPHEADER, [
-                    'Content-Type: application/json',
-                    'X-Service-Token: ' . $this->app['service_token'],
-                    'Content-Length: ' . strlen($payload),
-                ]);
-
-                $apiResponse = curl_exec($ch);
-                curl_close($ch);
-
-                $responseData = json_decode($apiResponse, true);
-
-                if (isset($responseData['status']) && $responseData['status'] === 'SUCCESS') {
-                    Security::flash('success', 'If the email exists, a reset message has been generated.');
-                } else {
-                    Security::flash('error', 'Notification service is currently unavailable.');
-                }
-            } else {
-                // Prevent email enumeration attacks by showing success even if email is not found
-                Security::flash('success', 'If the email exists, a reset message has been generated.');
-            }
-
-            header('Location: index.php?page=login');
-            exit;
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            view('auth/forgot', ['title' => 'Forgot Password']);
+            return;
         }
 
-        view('auth/forgot', ['title' => 'Forgot Password']);
-    }
+        Security::verifyCsrf();
 
-    public function reset(): void
-    {
-        $token = $_GET['token'] ?? $_POST['token'] ?? '';
+        $email = strtolower(trim($_POST['email'] ?? ''));
 
-        $user = $this->em->getRepository(User::class)
-            ->findOneBy(['resetToken' => $token]);
+        // Always show success to prevent email enumeration
+        $successMsg = 'If that email is registered, a password reset link has been sent.';
 
-        if (!$user || !$user->resetExpiresAt || $user->resetExpiresAt < new \DateTime()) {
-            exit('Reset token is invalid or expired.');
+        if ($email === '' || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
+            Security::flash('success', $successMsg);
+            header('Location: index.php?page=forgot'); exit;
         }
 
-        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            Security::verifyCsrf();
+        $user = $this->em->getRepository(User::class)->findOneBy(['email' => $email]);
 
-            $password = $_POST['password'] ?? '';
+        if ($user) {
 
-            if (strlen($password) < 8) {
-                exit('Password must be at least 8 characters.');
-            }
+            $token   = bin2hex(random_bytes(32));
+            $expires = new \DateTime('+1 hour');
 
-            $user->passwordHash = password_hash($password, PASSWORD_DEFAULT);
-            $user->resetToken = null;
-            $user->resetExpiresAt = null;
-
+            $user->resetToken     = $token;
+            $user->resetExpiresAt = $expires;
             $this->em->flush();
 
-            Security::flash('success', 'Password reset successful.');
-            header('Location: index.php?page=login');
-            exit;
+            // Build the reset URL
+            $resetUrl = ($this->app['base_url'] ?? '')
+                . '/index.php?page=reset&token=' . urlencode($token);
+
+
+            $html = '
+                <div style="font-family:Inter,sans-serif;max-width:520px;margin:auto;padding:32px;background:#fff;border-radius:12px;border:1px solid #e5ebe7;">
+                    <div style="font-size:28px;font-weight:700;color:#1b7f4f;margin-bottom:8px;">&#127807; EcoBin</div>
+                    <h2 style="color:#1a1a2e;margin-top:0;">Password Reset Request</h2>
+                    <p style="color:#555;">Hi <strong>' . htmlspecialchars($user->name, ENT_QUOTES, 'UTF-8') . '</strong>,</p>
+                    <p style="color:#555;">We received a request to reset your EcoBin password. Click the button below to choose a new one. This link expires in <strong>1 hour</strong>.</p>
+                    <div style="text-align:center;margin:32px 0;">
+                        <a href="' . htmlspecialchars($resetUrl, ENT_QUOTES, 'UTF-8') . '"
+                           style="background:#1b7f4f;color:#fff;text-decoration:none;padding:14px 32px;border-radius:8px;font-weight:600;font-size:16px;display:inline-block;">
+                            Reset My Password
+                        </a>
+                    </div>
+                    <p style="color:#888;font-size:13px;">If you did not request this, you can safely ignore this email.</p>
+                    <hr style="border:none;border-top:1px solid #e5ebe7;margin:24px 0;">
+                    <p style="color:#aaa;font-size:12px;text-align:center;">EcoBin &mdash; Waste Collection &amp; Recycling Management</p>
+                </div>';
+
+            // Send reset email via Mailer service (primary)
+            // Falls back gracefully — on local XAMPP, mail goes to storage/mail.log
+            $mailer = new Mailer($this->app['mail'] ?? []);
+            $mailer->send($user->email, 'EcoBin — Reset Your Password', $html);
+
+            // Also notify via Module 5 web service (best-effort, non-blocking)
+            try {
+                $client = new InternalApiClient($this->app['base_url'], $this->app['service_token']);
+                $client->call('notification.email', [
+                    'email'   => $user->email,
+                    'subject' => 'EcoBin Reset Your Password',
+                    'message' => $html,
+                ]);
+            } catch (\Throwable $e) {
+                error_log('notification.email service unavailable during password reset: ' . $e->getMessage());
+            }
+
+            $this->dispatcher->dispatch('auth.password_reset_requested', [
+                'entity' => 'User', 'entity_id' => $user->id,
+            ]);
         }
 
-        view('auth/reset', [
-            'title' => 'Reset Password',
-            'token' => $token
+        // Email enumeration prevention: same message either way
+        Security::flash('success', $successMsg);
+        header('Location: index.php?page=forgot'); exit;
+    }
+
+    // -------------------------------------------------------------------------
+    // Reset Password — Step 2
+    // GET  : validate token, show new-password form
+    // POST : verify token + expiry, hash new password, clear token (single-use)
+    //
+    // SECURITY:
+    //   Token validated against DB — not just any string.
+    //   Expiry enforced (1 hour). Expired tokens cleared for hygiene.
+    //   Token is single-use: nulled immediately after success.
+    //   Confirm-password match validated server-side.
+    // -------------------------------------------------------------------------
+    public function reset(): void
+    {
+        $token = trim($_GET['token'] ?? $_POST['token'] ?? '');
+
+        if ($token === '') {
+            Security::flash('error', 'Invalid or missing reset token.');
+            header('Location: index.php?page=forgot'); exit;
+        }
+
+        // ORM lookup by token — no raw SQL
+        $user = $this->em->getRepository(User::class)->findOneBy(['resetToken' => $token]);
+
+        if (!$user) {
+            Security::flash('error', 'This reset link is invalid. Please request a new one.');
+            header('Location: index.php?page=forgot'); exit;
+        }
+
+        // Check expiry
+        if ($user->resetExpiresAt === null || $user->resetExpiresAt < new \DateTime()) {
+            $user->resetToken     = null;
+            $user->resetExpiresAt = null;
+            $this->em->flush();
+            Security::flash('error', 'This reset link has expired. Please request a new one.');
+            header('Location: index.php?page=forgot'); exit;
+        }
+
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            view('auth/reset', ['title' => 'Reset Password', 'token' => $token]);
+            return;
+        }
+
+        Security::verifyCsrf();
+
+        $password = $_POST['password'] ?? '';
+        $confirm  = $_POST['password_confirm'] ?? '';
+
+        if (strlen($password) < 8) {
+            Security::flash('error', 'Password must be at least 8 characters.');
+            header('Location: index.php?page=reset&token=' . urlencode($token)); exit;
+        }
+
+        if ($password !== $confirm) {
+            Security::flash('error', 'Passwords do not match.');
+            header('Location: index.php?page=reset&token=' . urlencode($token)); exit;
+        }
+
+        // ORM UPDATE: hash new password and clear the single-use token
+        $user->passwordHash   = password_hash($password, PASSWORD_DEFAULT);
+        $user->resetToken     = null;
+        $user->resetExpiresAt = null;
+        $this->em->flush();
+
+        $this->dispatcher->dispatch('auth.password_reset_completed', [
+            'entity' => 'User', 'entity_id' => $user->id,
         ]);
+
+        Security::flash('success', 'Your password has been reset. You can now log in.');
+        header('Location: index.php?page=login'); exit;
     }
 
     public function logout(): void
@@ -427,17 +477,17 @@ class AuthController
             exit;
         }
 
-        $user->name = $name;
-        $user->role = $role;
+        $user->name   = $name;
+        $user->role   = $role;
         $user->status = $status;
 
         $this->em->flush();
 
         $this->dispatcher->dispatch('user.account_updated', [
-            'entity' => 'User',
+            'entity'    => 'User',
             'entity_id' => $user->id,
-            'role' => $role,
-            'status' => $status
+            'role'      => $role,
+            'status'    => $status,
         ]);
 
         Security::flash('success', 'User account updated.');

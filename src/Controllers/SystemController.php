@@ -24,7 +24,11 @@ class SystemController
     {
         Security::requireLogin();
         $list = $this->notifications->listForUser((int)$_SESSION['user_id']);
-        view('module5/notifications', ['title' => 'Notifications', 'notifications' => $list]);
+        view('module5/notifications', [
+            'title'         => 'Notifications',
+            'notifications' => $list,
+            'app'           => $this->app,   // needed by the API status-check widget
+        ]);
     }
 
     public function markRead(): void
