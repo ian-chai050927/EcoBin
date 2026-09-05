@@ -25,6 +25,14 @@ $config = Setup::createAttributeMetadataConfiguration(
 
 $entityManager = EntityManager::create($db, $config);
 
+try {
+    $entityManager->getConnection()->executeStatement(
+        "ALTER TABLE recycling_centers ADD COLUMN IF NOT EXISTS operating_hours varchar(120) DEFAULT 'Mon - Fri: 9:00 AM - 5:00 PM'"
+    );
+} catch (\Throwable) {
+    // Gracefully ignore if offline or not yet imported
+}
+
 $mailer = new Mailer($app['mail'] ?? []);
 
 $dispatcher = new EventDispatcher();

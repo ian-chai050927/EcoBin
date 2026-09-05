@@ -42,6 +42,12 @@ class AuthController
                 exit;
             }
 
+            if ($user->status !== 'Active') {
+                Security::flash('error', 'Your account has been ' . strtolower($user->status) . '. Please contact an administrator.');
+                header('Location: index.php?page=login');
+                exit;
+            }
+
             session_regenerate_id(true);
 
             $_SESSION['user_id'] = $user->id;
@@ -462,7 +468,8 @@ class AuthController
 
         $statuses = [
             'Active',
-            'Suspended'
+            'Suspended',
+            'Deactivated'
         ];
 
         $name = trim($_POST['name'] ?? '');
@@ -477,8 +484,8 @@ class AuthController
             exit('Invalid account update.');
         }
 
-        if ($user->id === (int)$_SESSION['user_id'] && $status === 'Suspended') {
-            Security::flash('error', 'You cannot suspend your own logged-in account.');
+        if ($user->id === (int)$_SESSION['user_id'] && $status !== 'Active') {
+            Security::flash('error', 'You cannot suspend or deactivate your own logged-in account.');
             header('Location: index.php?page=users');
             exit;
         }

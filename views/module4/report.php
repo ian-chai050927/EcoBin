@@ -54,7 +54,7 @@
                     <thead class="table-light">
                     <tr>
                         <th>ID</th>
-                        <th>Resident ID</th>
+                        <th>Resident</th>
                         <th>Created At</th>
                         <th>Scheduled Date</th>
                         <th>Status</th>
@@ -64,7 +64,7 @@
                     <?php foreach ($collections as $c): ?>
                         <tr>
                             <td>#<?= $c->id ?></td>
-                            <td><?= $c->residentId ?></td>
+                            <td><?= \EcoBin\Services\Security::e($c->resident->name) ?> (#<?= $c->resident->id ?>)</td>
                             <td><?= $c->createdAt->format('Y-m-d H:i') ?></td>
                             <td><?= $c->scheduledDate ? $c->scheduledDate->format('Y-m-d') : '-' ?></td>
                             <td><?= \EcoBin\Services\View::statusBadge($c->status) ?></td>
@@ -86,7 +86,7 @@
                     <thead class="table-light">
                     <tr>
                         <th>ID</th>
-                        <th>Center ID</th>
+                        <th>Center</th>
                         <th>Material</th>
                         <th>Weight (kg)</th>
                         <th>Status</th>
@@ -96,7 +96,7 @@
                     <?php foreach ($recycling as $r): ?>
                         <tr>
                             <td>#<?= $r->id ?></td>
-                            <td><?= $r->centerId ?></td>
+                            <td><?= \EcoBin\Services\Security::e($r->center->name) ?> (#<?= $r->center->id ?>)</td>
                             <td><?= \EcoBin\Services\Security::e($r->material) ?></td>
                             <td><?= $r->weightKg ?></td>
                             <td><?= \EcoBin\Services\View::statusBadge($r->status) ?></td>

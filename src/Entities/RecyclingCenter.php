@@ -37,6 +37,9 @@ class RecyclingCenter
     #[ORM\Column(length: 30)]
     public string $availability = 'Open';
 
+    #[ORM\Column(name: 'operating_hours', length: 120, nullable: true)]
+    public ?string $operatingHours = 'Mon - Fri: 9:00 AM - 5:00 PM';
+
     #[ORM\Column(name: 'created_at', type: 'datetime')]
     public \DateTime $createdAt;
 

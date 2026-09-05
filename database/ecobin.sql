@@ -158,6 +158,7 @@ CREATE TABLE `recycling_centers` (
   `address` varchar(500) NOT NULL,
   `accepted_materials` varchar(255) NOT NULL,
   `availability` varchar(30) NOT NULL DEFAULT 'Open',
+  `operating_hours` varchar(120) DEFAULT 'Mon - Fri: 9:00 AM - 5:00 PM',
   `created_at` datetime NOT NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
@@ -165,8 +166,8 @@ CREATE TABLE `recycling_centers` (
 -- Dumping data for table `recycling_centers`
 --
 
-INSERT INTO `recycling_centers` (`id`, `operator_id`, `name`, `address`, `accepted_materials`, `availability`, `created_at`) VALUES
-(1, 4, 'EcoBin Setapak Recycling Centre', 'Setapak, Kuala Lumpur', 'Plastic, Paper, Metal, E-Waste', 'Open', '2026-08-22 02:58:03');
+INSERT INTO `recycling_centers` (`id`, `operator_id`, `name`, `address`, `accepted_materials`, `availability`, `operating_hours`, `created_at`) VALUES
+(1, 4, 'EcoBin Setapak Recycling Centre', 'Setapak, Kuala Lumpur', 'Plastic, Paper, Metal, E-Waste', 'Open', 'Mon - Fri: 9:00 AM - 5:00 PM', '2026-08-22 02:58:03');
 
 -- --------------------------------------------------------
 

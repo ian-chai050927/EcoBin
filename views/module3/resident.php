@@ -111,9 +111,14 @@
                         <p class="mb-1 small eco-subheading" style="margin-bottom: 4px;">
                             <i class="bi bi-geo-alt"></i> <?= \EcoBin\Services\Security::e($c->address) ?>
                         </p>
-                        <p class="mb-0 small">
+                        <p class="mb-1 small">
                             <i class="bi bi-recycle"></i> <?= \EcoBin\Services\Security::e($c->acceptedMaterials) ?>
                         </p>
+                        <?php if (!empty($c->operatingHours)): ?>
+                            <p class="mb-0 small text-muted">
+                                <i class="bi bi-clock"></i> <?= \EcoBin\Services\Security::e($c->operatingHours) ?>
+                            </p>
+                        <?php endif; ?>
                     </div>
                 </div>
             <?php endforeach; ?>

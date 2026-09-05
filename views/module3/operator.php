@@ -11,11 +11,14 @@
             <div class="col-md-3">
                 <input class="form-control" name="name" placeholder="Centre name" required>
             </div>
-            <div class="col-md-3">
+            <div class="col-md-2">
                 <input class="form-control" name="address" placeholder="Address" required>
             </div>
-            <div class="col-md-3">
+            <div class="col-md-2">
                 <input class="form-control" name="accepted_materials" placeholder="Plastic, Paper, Metal" required>
+            </div>
+            <div class="col-md-2">
+                <input class="form-control" name="operating_hours" placeholder="e.g. Mon-Fri 9am-5pm" value="Mon - Fri: 9:00 AM - 5:00 PM">
             </div>
             <div class="col-md-2">
                 <select class="form-select" name="availability">

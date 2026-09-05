@@ -148,6 +148,7 @@
                                 <select class="form-select" name="status">
                                     <option <?= $u->status === 'Active' ? 'selected' : '' ?>>Active</option>
                                     <option <?= $u->status === 'Suspended' ? 'selected' : '' ?>>Suspended</option>
+                                    <option <?= $u->status === 'Deactivated' ? 'selected' : '' ?>>Deactivated</option>
                                 </select>
                             </div>
 

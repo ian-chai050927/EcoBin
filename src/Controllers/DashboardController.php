@@ -144,7 +144,7 @@ class DashboardController
             fputcsv($out, ['ID','Resident ID','Center ID','Material','Weight (kg)','Points','Status','Created At']);
             foreach ($recycling as $r) {
                 fputcsv($out, [
-                    $r->id, $r->residentId, $r->centerId, $r->material,
+                    $r->id, $r->resident->id, $r->center->id, $r->material,
                     $r->weightKg, $r->points, $r->status, $r->createdAt->format('Y-m-d H:i:s')
                 ]);
             }
@@ -164,8 +164,8 @@ class DashboardController
         fputcsv($out, ['ID','Resident ID','Preferred Date','Scheduled Date','Status','Staff ID','Created At']);
         foreach ($collections as $c) {
             fputcsv($out, [
-                $c->id, $c->residentId, $c->preferredDate->format('Y-m-d'),
-                $c->scheduledDate?->format('Y-m-d'), $c->status, $c->collectionStaffId, $c->createdAt->format('Y-m-d H:i:s')
+                $c->id, $c->resident->id, $c->preferredDate->format('Y-m-d'),
+                $c->scheduledDate?->format('Y-m-d'), $c->status, $c->collectionStaff?->id, $c->createdAt->format('Y-m-d H:i:s')
             ]);
         }
         fclose($out); exit;

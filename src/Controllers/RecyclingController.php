@@ -139,6 +139,7 @@ class RecyclingController
         $c->address           = mb_substr(trim($_POST['address']), 0, 500);
         $c->acceptedMaterials = mb_substr(trim($_POST['accepted_materials']), 0, 255);
         $c->availability      = in_array($_POST['availability'] ?? '', ['Open', 'Full', 'Closed'], true) ? $_POST['availability'] : 'Open';
+        $c->operatingHours    = mb_substr(trim($_POST['operating_hours'] ?? 'Mon - Fri: 9:00 AM - 5:00 PM'), 0, 120);
         $this->em->persist($c); $this->em->flush();
 
         $this->dispatcher->dispatch('recycling.center_saved', ['entity' => 'RecyclingCenter', 'entity_id' => $c->id]);

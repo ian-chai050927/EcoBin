@@ -25,6 +25,7 @@ final class View
         // User account
         'Active'      => 'eco-status-completed',
         'Suspended'   => 'eco-status-rejected',
+        'Deactivated' => 'eco-status-cancelled',
 
         // Recycling submissions
         'Approved'    => 'eco-status-completed',
