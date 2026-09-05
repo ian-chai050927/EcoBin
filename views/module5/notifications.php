@@ -28,11 +28,15 @@
 <?php endif; ?>
 
 <div class="eco-card mt-4">
-    <h5>Module 5 → Module 2 Web-Service Status Check</h5>
-    <p class="eco-subheading" style="margin-bottom: 12px;">Demonstrates reverse-direction service communication.</p>
+    <h5>Module 5 → Inter-Module Web-Service Status Check</h5>
+    <p class="eco-subheading" style="margin-bottom: 12px;">Demonstrates reverse-direction service communication with Module 2 and Module 3.</p>
 
     <div class="input-group">
-        <input id="collectionId" class="form-control" type="number" min="1" placeholder="Collection request ID">
+        <select id="serviceSelect" class="form-select" style="max-width: 240px;">
+            <option value="collection.status">Collection Status (Module 2)</option>
+            <option value="recycling.status">Recycling Status (Module 3)</option>
+        </select>
+        <input id="targetId" class="form-control" type="number" min="1" placeholder="Request / Submission ID">
         <button class="btn-eco" onclick="checkStatus()">Check Status API</button>
     </div>
     <pre id="apiResult" class="mt-3 mb-0"></pre>
@@ -67,24 +71,26 @@ $apiUrl  = $scheme . '://' . $host . rtrim(dirname($script), '/\\') . '/api.php'
         const cfg     = document.getElementById('api-config');
         const token   = cfg.dataset.token;
         const apiUrl  = cfg.dataset.url;
-        const id      = document.getElementById('collectionId').value;
+        const service = document.getElementById('serviceSelect').value;
+        const id      = document.getElementById('targetId').value;
         const result  = document.getElementById('apiResult');
 
         if (!id || isNaN(Number(id)) || Number(id) < 1) {
-            result.textContent = 'Please enter a valid collection request ID.';
+            result.textContent = 'Please enter a valid record ID.';
             return;
         }
 
         result.textContent = 'Calling API…';
 
+        const payload = service === 'collection.status'
+            ? { collection_id: Number(id), user_id: Number(cfg.dataset.uid) }
+            : { submission_id: Number(id) };
+
         const req = {
             requestID : generateRequestId(),
             timestamp : new Date().toISOString(),
-            service   : 'collection.status',
-            payload   : {
-                collection_id: Number(id),
-                user_id      : Number(cfg.dataset.uid)  // IDOR check: server verifies ownership
-            }
+            service   : service,
+            payload   : payload
         };
 
         try {

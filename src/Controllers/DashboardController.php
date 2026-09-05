@@ -44,6 +44,29 @@ class DashboardController
 
         /*
          * WEB SERVICE (CONSUMED):
+         * Module 4 consumes Module 3's recycling.status service to verify
+         * the status and details of recent recycling submissions.
+         */
+        if (!empty($reportData['recycling'])) {
+            $latestRecycling = $reportData['recycling'][0];
+            try {
+                $recyclingClient = new InternalApiClient(
+                    $this->app['base_url'],
+                    $this->app['service_token']
+                );
+                $recyclingStatusRes = $recyclingClient->call('recycling.status', [
+                    'submission_id' => $latestRecycling->id
+                ]);
+                if (($recyclingStatusRes['status'] ?? null) === 'SUCCESS') {
+                    $reportData['verifiedSubmission'] = $recyclingStatusRes['data'];
+                }
+            } catch (\Throwable $e) {
+                error_log('Module 3 recycling.status service unavailable: ' . $e->getMessage());
+            }
+        }
+
+        /*
+         * WEB SERVICE (CONSUMED):
          *
          * Module 4 consumes Module 5's notification.create service
          * when a generated report reveals an operational problem —
