@@ -31,8 +31,26 @@ function waitingSince(\DateTime $createdAt): string
     return 'Just submitted';
 }
 
-$pending  = array_filter($collections, fn($c) => !$c->collectionStaff);
-$assigned = array_filter($collections, fn($c) => (bool) $c->collectionStaff);
+$pending = array_filter(
+    $collections,
+    fn($c) =>
+        $c->status === 'Pending'
+        && !$c->collectionStaff
+);
+
+$assigned = array_filter(
+    $collections,
+    fn($c) =>
+        in_array(
+            $c->status,
+            [
+                'Assigned',
+                'In Progress'
+            ],
+            true
+        )
+        && (bool) $c->collectionStaff
+);
 
 
 usort($pending, function ($a, $b) {
@@ -137,8 +155,12 @@ usort($pending, function ($a, $b) {
 
 <?php endif; ?>
 
-<?php if (count($collections) === 0): ?>
+<?php if (
+    count($pending) === 0
+    &&
+    count($assigned) === 0
+): ?>
     <div class="eco-card text-center py-5">
-        <p class="eco-subheading mb-0">No collection requests yet. New submissions from residents will appear here.</p>
+        <p class="eco-subheading mb-0">No active collection requests at the moment.</p>
     </div>
 <?php endif; ?>

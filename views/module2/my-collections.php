@@ -30,7 +30,7 @@ $statusFilter = trim($_GET['status'] ?? '');
 
 $filteredCollections = array_filter(
     $collections,
-    function ($collection) use ($search, $statusFilter, $reports) {
+    function ($collection) use ($search, $statusFilter) {
 
         if ($statusFilter !== '' && $collection->status !== $statusFilter) {
             return false;

@@ -1,5 +1,11 @@
 <?php
-
+/*
+ * @author EcoBin Team — Shared API Gateway (all modules expose services here)
+ * REST/JSON web-service endpoint protected by X-Service-Token.
+ * Each named 'service' corresponds to one module's exposed function.
+ * IFA-compliant: every request requires requestID + timestamp;
+ * every response includes status + timestamp.
+ */
 declare(strict_types=1);
 
 use EcoBin\Entities\CollectionRequest;
@@ -42,29 +48,21 @@ if (!$requestID || !$timestamp || !$service) {
 try {
     switch ($service) {
         case 'collection.status':
-            $collectionId = (int)($payload['collection_id'] ?? 0);
-            if ($collectionId <= 0) throw new RuntimeException('collection_id is required and must be a positive integer.');
-
-            $c = $em->find(CollectionRequest::class, $collectionId);
-            if (!$c) throw new RuntimeException('Collection not found.');
-
-
-            $callerId = (int)($payload['user_id'] ?? 0);
-            if ($callerId > 0 && $c->resident->id !== $callerId) {
-                throw new RuntimeException('Forbidden: this collection does not belong to you.');
-            }
-
+            $c = $em->find(CollectionRequest::class, (int)($payload['collection_id'] ?? 0));
+            if (!$c) throw new RuntimeException('Collection not found');
             $data = [
-                'collection_id' => $c->id,
-                'status'        => $c->status,
-                'scheduled_date'=> $c->scheduledDate?->format('Y-m-d'),
-                'staff_id'      => $c->collectionStaff?->id,   // ORM association — was wrongly $collectionStaffId
+                'collection_id'=>$c->id,
+                'status'=>$c->status,
+                'scheduled_date'=>$c->scheduledDate?->format('Y-m-d'),
+                'staff_id'      => $c->collectionStaff?->id,  // ORM association — NOT $collectionStaffId
                 'staff_name'    => $c->collectionStaff?->name,
             ];
             break;
 
         case 'user.status':
-
+            // Module 1 (Auth): exposed so other modules can re-verify
+            // a user's current role/status at the moment of use,
+            // rather than trusting a possibly-stale local read.
             $email = trim((string)($payload['email'] ?? ''));
             if ($email === '' || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
                 throw new RuntimeException('Invalid or missing email address.');
@@ -87,7 +85,11 @@ try {
             $notifMsg = mb_substr((string)($payload['message'] ?? ''), 0, 4000);
             if ($userId <= 0 || $notifMsg === '') throw new RuntimeException('Invalid notification payload');
             $n = new Notification();
-
+            /*
+             * ORM RELATIONSHIP USAGE:
+             * Assign the user association via getReference() — Doctrine writes
+             * the user_id FK column on flush without loading the User entity.
+             */
             $n->user    = $em->getReference(\EcoBin\Entities\User::class, $userId);
             $n->title   = mb_substr((string)($payload['title'] ?? 'Notification'), 0, 120);
             $n->message = $notifMsg;
