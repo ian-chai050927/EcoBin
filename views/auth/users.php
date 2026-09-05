@@ -151,8 +151,9 @@
                                 </select>
                             </div>
 
-                            <div class="col-md-2">
-                                <button class="btn-eco w-100">Save Changes</button>
+                            <div class="col-md-2 d-flex gap-2">
+                                <a href="index.php?page=users" class="btn btn-outline-secondary w-100">Cancel</a>
+                                <button class="btn-eco w-100">Save</button>
                             </div>
 
                         </form>
