@@ -135,17 +135,28 @@ try {
             $data = $facade->getDashboardStats();
             break;
         case 'notification.email':
-            $email = trim((string)($payload['email'] ?? ''));
+            $email   = trim((string)($payload['email'] ?? ''));
             $subject = trim((string)($payload['subject'] ?? ''));
             $message = (string)($payload['message'] ?? '');
+
             if ($email === '' || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
                 throw new RuntimeException('Invalid or missing email address.');
             }
             if ($subject === '' || $message === '') {
                 throw new RuntimeException('Subject and message are required.');
             }
+
+
+            $rateLimiter = new \EcoBin\Services\RateLimiter($em);
+            $rateLimiter->checkAndLog(
+                1,                   
+                'notification.email', 
+                10,                   
+                3600                  
+            );
+
             $mailer = new \EcoBin\Services\Mailer($app['mail'] ?? []);
-            $sent = $mailer->send($email, $subject, $message);
+            $sent   = $mailer->send($email, $subject, $message);
             if (!$sent) {
                 throw new RuntimeException('Email dispatch failed.');
             }
