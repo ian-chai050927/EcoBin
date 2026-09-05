@@ -48,12 +48,25 @@ if (!$requestID || !$timestamp || !$service) {
 try {
     switch ($service) {
         case 'collection.status':
-            $c = $em->find(CollectionRequest::class, (int)($payload['collection_id'] ?? 0));
-            if (!$c) throw new RuntimeException('Collection not found');
+            $collectionId = (int)($payload['collection_id'] ?? 0);
+            if ($collectionId <= 0) throw new RuntimeException('collection_id is required and must be a positive integer.');
+
+            $c = $em->find(CollectionRequest::class, $collectionId);
+            if (!$c) throw new RuntimeException('Collection not found.');
+
+            /*
+             * SECURE CODING: IDOR / Broken Access Control Protection.
+             * If the caller provides their user_id, ensure they actually own this collection.
+             */
+            $callerId = (int)($payload['user_id'] ?? 0);
+            if ($callerId > 0 && $c->resident->id !== $callerId) {
+                throw new RuntimeException('Forbidden: this collection does not belong to you.');
+            }
+
             $data = [
-                'collection_id'=>$c->id,
-                'status'=>$c->status,
-                'scheduled_date'=>$c->scheduledDate?->format('Y-m-d'),
+                'collection_id' => $c->id,
+                'status'        => $c->status,
+                'scheduled_date'=> $c->scheduledDate?->format('Y-m-d'),
                 'staff_id'      => $c->collectionStaff?->id,  // ORM association — NOT $collectionStaffId
                 'staff_name'    => $c->collectionStaff?->name,
             ];
