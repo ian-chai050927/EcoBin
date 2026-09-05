@@ -1,9 +1,74 @@
 <style>
     @media print {
-        body * { visibility: hidden; }
-        #printableReport, #printableReport * { visibility: visible; }
-        #printableReport { position: absolute; left: 0; top: 0; width: 100%; }
-        .no-print { display: none !important; }
+        @page {
+            margin: 1cm;
+            size: A4;
+        }
+        
+        /* Hide UI elements we don't want in the PDF */
+        .no-print, 
+        .eco-sidebar, 
+        .eco-topbar { 
+            display: none !important; 
+        }
+        
+        /* Reset the main container to take full width */
+        .eco-main {
+            margin-left: 0 !important;
+            padding: 0 !important;
+            background: #fff !important;
+        }
+        
+        body {
+            background-color: #fff !important;
+            color: #000 !important;
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
+        }
+        
+        /* Clean up the report card container */
+        #printableReport { 
+            padding: 0 !important;
+            box-shadow: none !important;
+            border: none !important;
+        }
+        
+        .eco-card {
+            box-shadow: none !important;
+            border: none !important;
+            background: transparent !important;
+        }
+        
+        /* Fix Bootstrap Tables for Print */
+        .table {
+            border-collapse: collapse !important;
+        }
+        .table td, .table th {
+            border: 1px solid #dee2e6 !important;
+            padding: 8px !important;
+        }
+        .table-light th {
+            background-color: #f8f9fa !important;
+        }
+        
+        /* Table page break handling */
+        table { page-break-inside: auto; }
+        tr { page-break-inside: avoid; page-break-after: auto; }
+        thead { display: table-header-group; }
+        
+        /* Ensure the 4 stat cards stay in a row */
+        .row.mb-5 > div.col-md-3 {
+            flex: 0 0 auto !important;
+            width: 25% !important;
+            max-width: 25% !important;
+            float: left !important;
+            display: block !important;
+        }
+        .row.mb-5 {
+            display: flex !important;
+            flex-wrap: nowrap !important;
+            width: 100% !important;
+        }
     }
     .report-header {
         border-bottom: 3px solid var(--eco-primary);
