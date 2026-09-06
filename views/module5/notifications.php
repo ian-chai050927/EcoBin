@@ -28,13 +28,12 @@
 <?php endif; ?>
 
 <div class="eco-card mt-4">
-    <h5>Module 5 → Inter-Module Web-Service Status Check</h5>
-    <p class="eco-subheading" style="margin-bottom: 12px;">Demonstrates reverse-direction service communication with Module 2 and Module 3.</p>
+    <h5>Inter-Module Web-Service Status Check</h5>
 
     <div class="input-group">
         <select id="serviceSelect" class="form-select" style="max-width: 240px;">
-            <option value="collection.status">Collection Status (Module 2)</option>
-            <option value="recycling.status">Recycling Status (Module 3)</option>
+            <option value="collection.status">Collection Status</option>
+            <option value="recycling.status">Recycling Status</option>
         </select>
         <input id="targetId" class="form-control" type="number" min="1" placeholder="Request / Submission ID">
         <button class="btn-eco" onclick="checkStatus()">Check Status API</button>
