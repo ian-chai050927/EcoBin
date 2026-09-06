@@ -117,7 +117,7 @@ function navActive(string $page): string
     </div>
 <?php endif; ?>
 
-<?php if ($message = Security::flash('error')): ?>
+<?php if ($message = (Security::flash('error') ?? Security::flash('danger'))): ?>
     <div class="alert alert-danger border-0 shadow-sm">
         <i class="bi bi-exclamation-circle me-2"></i><?= Security::e($message) ?>
     </div>
