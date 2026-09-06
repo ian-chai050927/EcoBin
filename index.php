@@ -97,8 +97,10 @@ switch ($page) {
     case 'module3': $recycling->resident(); break;
     case 'module3-submit': $recycling->submit(); break;
     case 'module3-appointment': $recycling->appointment(); break;
+    case 'module3-cancel-appointment': $recycling->cancelAppointment(); break;
     case 'module3-operator': $recycling->operator(); break;
     case 'module3-center-save': $recycling->centerSave(); break;
+    case 'module3-center-status': $recycling->centerStatus(); break;
     case 'module3-review-submission': $recycling->reviewSubmission(); break;
     case 'module3-review-appointment': $recycling->reviewAppointment(); break;
     case 'module3-redeem': $recycling->redeem(); break;
