@@ -1,4 +1,8 @@
 <?php
+/**
+ * Module 3: Recycling & Reward Management
+ * @author Ho Ze-Yang
+ */
 namespace EcoBin\Services\RewardStrategy;
 
 interface RewardCalculatorInterface

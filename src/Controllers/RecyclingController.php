@@ -1,5 +1,8 @@
 <?php
-
+/**
+ * Module 3: Recycling & Reward Management
+ * @author Ho Ze-Yang
+ */
 namespace EcoBin\Controllers;
 
 use Doctrine\ORM\EntityManagerInterface;

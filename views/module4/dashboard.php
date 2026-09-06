@@ -93,8 +93,7 @@
             const json = await res.json();
             const d = json.data || {};
 
-            // 1. Top Stat Cards — real .eco-stat-card markup, matching
-            // what View::statCard() renders server-side elsewhere.
+
             document.getElementById('stats').innerHTML = [
                 ['Total Requests', d.collection_requests, 'bi-inbox'],
                 ['Collections Completed', d.collection_completed, 'bi-check2-circle'],

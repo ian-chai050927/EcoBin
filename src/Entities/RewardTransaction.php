@@ -1,8 +1,7 @@
 <?php
-/*
- * @author EcoBin Team — Module 3 (Recycling & Rewards)
- * Entity mapped to reward_transactions table via Doctrine ORM.
- * The user relationship uses ManyToOne to User.
+/**
+ * Module 3: Recycling & Reward Management
+ * @author Ho Ze-Yang
  */
 
 namespace EcoBin\Entities;

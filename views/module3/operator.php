@@ -1,3 +1,4 @@
+
 <h2 class="eco-heading">Recycling Centre Operations</h2>
 <p class="eco-subheading">Maintain centre information, review submissions and appointments, and update availability.</p>
 

@@ -1,8 +1,7 @@
 <?php
-/*
- * @author EcoBin Team — Module 3 (Recycling & Rewards)
- * Entity mapped to recycling_appointments table via Doctrine ORM.
- * Uses ManyToOne associations for resident (User) and center (RecyclingCenter).
+/**
+ * Module 3: Recycling & Reward Management
+ * @author Ho Ze-Yang
  */
 
 namespace EcoBin\Entities;
