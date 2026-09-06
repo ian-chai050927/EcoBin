@@ -39,12 +39,7 @@ class NotificationObserver implements EventObserver
             );
         }
 
-        /*
-         * STAFF NOTIFICATION (Module 5 only — no other module touched):
-         * When a collection is assigned, look up the CollectionRequest by entity_id
-         * and traverse the ORM association to find the assigned collector,
-         * then notify them directly.
-         */
+
         if ($event === 'collection.assigned' && !empty($data['entity_id'])) {
             $collection = $this->em->find(
                 \EcoBin\Entities\CollectionRequest::class,
@@ -61,12 +56,8 @@ class NotificationObserver implements EventObserver
             }
         }
 
-        /*
-         * OPERATOR NOTIFICATION — New Recycling Submission:
-         * When a resident submits a recycling drop-off, look up the submission
-         * by entity_id, traverse center->operator ORM association, and notify
-         * the operator that a new submission awaits their review.
-         */
+
+
         if ($event === 'recycling.submitted' && !empty($data['entity_id'])) {
             $submission = $this->em->find(
                 \EcoBin\Entities\RecyclingSubmission::class,
@@ -84,12 +75,7 @@ class NotificationObserver implements EventObserver
             }
         }
 
-        /*
-         * OPERATOR NOTIFICATION — New Appointment Booked:
-         * When a resident books a recycling appointment, look up the appointment
-         * by entity_id, traverse center->operator ORM association, and notify
-         * the operator of the incoming drop-off booking.
-         */
+
         if ($event === 'recycling.appointment_created' && !empty($data['entity_id'])) {
             $appointment = $this->em->find(
                 \EcoBin\Entities\RecyclingAppointment::class,
@@ -108,11 +94,7 @@ class NotificationObserver implements EventObserver
         }
     }
 
-    /**
-     * Persists a single Notification entity for the given user.
-     * Using getReference() avoids an extra SELECT — Doctrine writes
-     * the user_id FK column automatically on flush.
-     */
+
     private function persistNotification(
         int    $userId,
         string $title,

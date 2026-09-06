@@ -33,11 +33,7 @@ class AnnouncementService
         $a->title   = mb_substr($title, 0, 150);
         $a->message = mb_substr($message, 0, 4000);
 
-        /*
-         * ORM RELATIONSHIP USAGE:
-         * Assign the author (User) via getReference() so Doctrine writes the
-         * created_by FK column on flush without loading the full User entity.
-         */
+
         $a->author = $this->em->getReference(User::class, $createdBy);
 
         $this->em->persist($a);

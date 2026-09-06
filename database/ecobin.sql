@@ -44,7 +44,16 @@ INSERT INTO `activity_logs` (`id`, `user_id`, `activity`, `created_at`) VALUES
 (3, 1, 'auth.login', '2026-08-21 21:09:55'),
 (4, 3, 'auth.login', '2026-08-21 21:10:19'),
 (5, 4, 'auth.login', '2026-08-21 21:10:32'),
-(6, 1, 'auth.login', '2026-08-26 11:52:59');
+(6, 1, 'auth.login', '2026-08-26 11:52:59'),
+(7, 1, 'waste.report.created', '2026-09-01 08:12:10'),
+(8, 1, 'collection.request.created', '2026-09-01 08:15:44'),
+(9, 1, 'recycling.submission.created', '2026-09-02 10:05:33'),
+(10, 2, 'announcement.created', '2026-09-02 11:00:00'),
+(11, 1, 'recycling.appointment.created', '2026-09-03 09:30:00'),
+(12, 3, 'collection.completed', '2026-09-04 14:20:00'),
+(13, 4, 'recycling.submission.approved', '2026-09-05 10:45:00'),
+(14, 1, 'reward.redeemed', '2026-09-05 11:00:00'),
+(15, 1, 'auth.login', '2026-09-06 08:00:00');
 
 -- --------------------------------------------------------
 
@@ -65,7 +74,9 @@ CREATE TABLE `announcements` (
 --
 
 INSERT INTO `announcements` (`id`, `title`, `message`, `created_by`, `created_at`) VALUES
-(1, 'Welcome to EcoBin', 'Use EcoBin to report waste, schedule collection and participate in recycling.', 2, '2026-08-22 02:58:03');
+(1, 'Welcome to EcoBin', 'Use EcoBin to report waste, schedule collection and participate in recycling.', 2, '2026-08-22 02:58:03'),
+(2, 'Recycling Drive — September 2026', 'EcoBin is hosting a special recycling drive throughout September. Submit your recyclables and earn double points this month!', 2, '2026-09-01 09:00:00'),
+(3, 'Collection Schedule Notice', 'Waste collection services will be temporarily unavailable on 8 September 2026 (public holiday). Please reschedule accordingly.', 2, '2026-09-05 10:00:00');
 
 -- --------------------------------------------------------
 
@@ -89,12 +100,19 @@ CREATE TABLE `audit_logs` (
 --
 
 INSERT INTO `audit_logs` (`id`, `user_id`, `action`, `entity`, `entity_id`, `details`, `ip_address`, `created_at`) VALUES
-(1, 1, 'auth.login', 'User', 1, '{\"entity\":\"User\",\"entity_id\":1}', '::1', '2026-08-21 20:59:04'),
-(2, 2, 'auth.login', 'User', 2, '{\"entity\":\"User\",\"entity_id\":2}', '::1', '2026-08-21 21:09:26'),
-(3, 1, 'auth.login', 'User', 1, '{\"entity\":\"User\",\"entity_id\":1}', '::1', '2026-08-21 21:09:55'),
-(4, 3, 'auth.login', 'User', 3, '{\"entity\":\"User\",\"entity_id\":3}', '::1', '2026-08-21 21:10:19'),
-(5, 4, 'auth.login', 'User', 4, '{\"entity\":\"User\",\"entity_id\":4}', '::1', '2026-08-21 21:10:32'),
-(6, 1, 'auth.login', 'User', 1, '{\"entity\":\"User\",\"entity_id\":1}', '::1', '2026-08-26 11:52:59');
+(1, 1, 'auth.login', 'User', 1, '{"entity":"User","entity_id":1}', '::1', '2026-08-21 20:59:04'),
+(2, 2, 'auth.login', 'User', 2, '{"entity":"User","entity_id":2}', '::1', '2026-08-21 21:09:26'),
+(3, 1, 'auth.login', 'User', 1, '{"entity":"User","entity_id":1}', '::1', '2026-08-21 21:09:55'),
+(4, 3, 'auth.login', 'User', 3, '{"entity":"User","entity_id":3}', '::1', '2026-08-21 21:10:19'),
+(5, 4, 'auth.login', 'User', 4, '{"entity":"User","entity_id":4}', '::1', '2026-08-21 21:10:32'),
+(6, 1, 'auth.login', 'User', 1, '{"entity":"User","entity_id":1}', '::1', '2026-08-26 11:52:59'),
+(7, 1, 'waste.report.created', 'WasteReport', 1, '{"entity":"WasteReport","entity_id":1,"category":"Household Waste"}', '::1', '2026-09-01 08:12:10'),
+(8, 1, 'collection.request.created', 'CollectionRequest', 1, '{"entity":"CollectionRequest","entity_id":1}', '::1', '2026-09-01 08:15:44'),
+(9, 2, 'collection.assigned', 'CollectionRequest', 1, '{"entity":"CollectionRequest","entity_id":1,"staff_id":3}', '::1', '2026-09-02 09:00:00'),
+(10, 3, 'collection.completed', 'CollectionRequest', 1, '{"entity":"CollectionRequest","entity_id":1,"status":"Completed"}', '::1', '2026-09-04 14:20:00'),
+(11, 1, 'recycling.submission.created', 'RecyclingSubmission', 1, '{"entity":"RecyclingSubmission","entity_id":1,"material":"Plastic"}', '::1', '2026-09-02 10:05:33'),
+(12, 4, 'recycling.submission.approved', 'RecyclingSubmission', 1, '{"entity":"RecyclingSubmission","entity_id":1,"points":75}', '::1', '2026-09-05 10:45:00'),
+(13, 1, 'reward.redeemed', 'RewardTransaction', 2, '{"entity":"RewardTransaction","entity_id":2,"points":-50}', '::1', '2026-09-05 11:00:00');
 
 -- --------------------------------------------------------
 
@@ -114,11 +132,17 @@ CREATE TABLE `collection_requests` (
   `created_at` datetime NOT NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+--
+-- Dumping data for table `collection_requests`
+--
+
+INSERT INTO `collection_requests` (`id`, `waste_report_id`, `resident_id`, `preferred_date`, `scheduled_date`, `collection_staff_id`, `status`, `remarks`, `created_at`) VALUES
+(1, 1, 1, '2026-09-03', '2026-09-04', 3, 'Completed', 'Collected on schedule. All waste cleared.', '2026-09-01 08:15:44'),
+(2, 2, 1, '2026-09-08', '2026-09-09', 3, 'Assigned', NULL, '2026-09-05 09:00:00'),
+(3, 3, 1, '2026-09-12', NULL, NULL, 'Pending', NULL, '2026-09-06 10:30:00');
+
 -- --------------------------------------------------------
 
---
--- Table structure for table `notifications`
---
 
 CREATE TABLE `notifications` (
   `id` int(11) NOT NULL,
@@ -130,11 +154,21 @@ CREATE TABLE `notifications` (
   `created_at` datetime NOT NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+--
+-- Dumping data for table `notifications`
+--
+
+INSERT INTO `notifications` (`id`, `user_id`, `title`, `message`, `type`, `is_read`, `created_at`) VALUES
+(1, 1, 'Collection Scheduled', 'Your waste collection has been scheduled for 04 Sep 2026.', 'Collection', 1, '2026-09-02 09:05:00'),
+(2, 3, 'New Collection Assigned', 'You have been assigned a waste collection scheduled for 04 Sep 2026.', 'Collection', 1, '2026-09-02 09:05:01'),
+(3, 1, 'Collection Completed', 'Your waste collection has been completed. Thank you!', 'Collection', 1, '2026-09-04 14:25:00'),
+(4, 1, 'Recycling Approved', 'Your recycling submission has been approved. 75 points have been credited to your account.', 'Reward', 0, '2026-09-05 10:50:00'),
+(5, 1, 'Reward Redeemed', 'Your reward redemption of 50 points has been processed successfully.', 'Reward', 0, '2026-09-05 11:05:00'),
+(6, 3, 'New Collection Assigned', 'You have been assigned a waste collection scheduled for 09 Sep 2026.', 'Collection', 0, '2026-09-05 09:05:00'),
+(7, 1, 'Appointment Confirmed', 'Your recycling appointment at EcoBin Setapak Recycling Centre is now Confirmed.', 'Recycling', 0, '2026-09-06 09:00:00');
+
 -- --------------------------------------------------------
 
---
--- Table structure for table `recycling_appointments`
---
 
 CREATE TABLE `recycling_appointments` (
   `id` int(11) NOT NULL,
@@ -145,11 +179,16 @@ CREATE TABLE `recycling_appointments` (
   `created_at` datetime NOT NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+--
+-- Dumping data for table `recycling_appointments`
+--
+
+INSERT INTO `recycling_appointments` (`id`, `resident_id`, `center_id`, `appointment_at`, `status`, `created_at`) VALUES
+(1, 1, 1, '2026-09-07 10:00:00', 'Confirmed', '2026-09-03 09:30:00'),
+(2, 1, 1, '2026-09-10 14:00:00', 'Pending', '2026-09-06 08:45:00');
+
 -- --------------------------------------------------------
 
---
--- Table structure for table `recycling_centers`
---
 
 CREATE TABLE `recycling_centers` (
   `id` int(11) NOT NULL,
@@ -186,11 +225,17 @@ CREATE TABLE `recycling_submissions` (
   `created_at` datetime NOT NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+--
+-- Dumping data for table `recycling_submissions`
+--
+
+INSERT INTO `recycling_submissions` (`id`, `resident_id`, `center_id`, `material`, `weight_kg`, `points`, `status`, `created_at`) VALUES
+(1, 1, 1, 'Plastic', 5.00, 75, 'Approved', '2026-09-02 10:05:33'),
+(2, 1, 1, 'Metal', 2.50, 50, 'Approved', '2026-09-05 10:00:00'),
+(3, 1, 1, 'Paper', 3.00, 30, 'Pending', '2026-09-06 09:15:00');
+
 -- --------------------------------------------------------
 
---
--- Table structure for table `reward_transactions`
---
 
 CREATE TABLE `reward_transactions` (
   `id` int(11) NOT NULL,
@@ -201,11 +246,17 @@ CREATE TABLE `reward_transactions` (
   `created_at` datetime NOT NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+--
+-- Dumping data for table `reward_transactions`
+--
+
+INSERT INTO `reward_transactions` (`id`, `user_id`, `points`, `type`, `description`, `created_at`) VALUES
+(1, 1, 75, 'Earn', 'Points earned for recycling 5.00 kg of Plastic.', '2026-09-05 10:50:00'),
+(2, 1, -50, 'Redeem', 'Reward redemption: EcoBin Eco Bag (50 pts).', '2026-09-05 11:00:00'),
+(3, 1, 50, 'Earn', 'Points earned for recycling 2.50 kg of Metal.', '2026-09-05 10:55:00');
+
 -- --------------------------------------------------------
 
---
--- Table structure for table `system_config`
---
 
 CREATE TABLE `system_config` (
   `config_key` varchar(80) NOT NULL,
@@ -273,8 +324,14 @@ CREATE TABLE `waste_reports` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
--- Indexes for dumped tables
+-- Dumping data for table `waste_reports`
 --
+
+INSERT INTO `waste_reports` (`id`, `resident_id`, `category`, `description`, `image`, `priority`, `waste_size`, `latitude`, `longitude`, `address`, `status`, `created_at`) VALUES
+(1, 1, 'Household Waste', 'Large pile of household trash near the roadside. Has been there for 3 days and is attracting pests.', NULL, 'High', 'Large', 3.1882700, 101.7000500, 'Jalan Gombak, Setapak, 53000 Kuala Lumpur', 'Completed', '2026-09-01 08:12:10'),
+(2, 1, 'Bulky Item', 'Old sofa and broken cabinet left outside the apartment block. Residents are complaining.', NULL, 'Normal', 'Large', 3.1901200, 101.7023400, 'Jalan Pahang, Setapak, 53000 Kuala Lumpur', 'In Progress', '2026-09-05 08:50:00'),
+(3, 1, 'Hazardous Waste', 'Discarded paint cans and chemical containers found near the playground. Urgent removal needed.', NULL, 'Urgent', 'Medium', 3.1875300, 101.6998700, 'Taman Setapak Indah, 53000 Kuala Lumpur', 'Pending', '2026-09-06 10:25:00');
+
 
 --
 -- Indexes for table `activity_logs`
@@ -369,37 +426,37 @@ ALTER TABLE `waste_reports`
 -- AUTO_INCREMENT for table `activity_logs`
 --
 ALTER TABLE `activity_logs`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=16;
 
 --
 -- AUTO_INCREMENT for table `announcements`
 --
 ALTER TABLE `announcements`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
 
 --
 -- AUTO_INCREMENT for table `audit_logs`
 --
 ALTER TABLE `audit_logs`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=14;
 
 --
 -- AUTO_INCREMENT for table `collection_requests`
 --
 ALTER TABLE `collection_requests`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
 
 --
 -- AUTO_INCREMENT for table `notifications`
 --
 ALTER TABLE `notifications`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=8;
 
 --
 -- AUTO_INCREMENT for table `recycling_appointments`
 --
 ALTER TABLE `recycling_appointments`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
 
 --
 -- AUTO_INCREMENT for table `recycling_centers`
@@ -411,13 +468,13 @@ ALTER TABLE `recycling_centers`
 -- AUTO_INCREMENT for table `recycling_submissions`
 --
 ALTER TABLE `recycling_submissions`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
 
 --
 -- AUTO_INCREMENT for table `reward_transactions`
 --
 ALTER TABLE `reward_transactions`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
 
 --
 -- AUTO_INCREMENT for table `users`
@@ -429,7 +486,7 @@ ALTER TABLE `users`
 -- AUTO_INCREMENT for table `waste_reports`
 --
 ALTER TABLE `waste_reports`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
 
 --
 -- Constraints for dumped tables

@@ -28,27 +28,13 @@ class AuditObserver implements EventObserver
             $userId = $data['entity_id'];
         }
 
-        /*
-         * Build a role-specific action label so the audit log shows exactly
-         * what type of user performed the action.
-         *
-         * Examples:
-         *   auth.login [Admin]
-         *   auth.login [Resident]
-         *   auth.login [Collection Staff]
-         *   auth.login [Operator]
-         */
+
         $role       = $data['role'] ?? ($_SESSION['role'] ?? null);
         $actionLabel = $role ? "{$event} [{$role}]" : $event;
 
         $audit = new AuditLog();
 
-        /*
-         * ORM RELATIONSHIP USAGE:
-         * Assign the User association via getReference() when a user ID is
-         * available. This creates a proxy without a SELECT, satisfying the
-         * ORM relationship requirement efficiently.
-         */
+
         $audit->user      = $userId ? $this->em->getReference(User::class, (int)$userId) : null;
         $audit->action    = $actionLabel;
         $audit->entity    = $data['entity'] ?? 'System';
@@ -56,10 +42,7 @@ class AuditObserver implements EventObserver
         $audit->details   = json_encode($data, JSON_UNESCAPED_UNICODE);
         $audit->ipAddress = $_SERVER['REMOTE_ADDR'] ?? 'CLI';
 
-        /*
-         * ActivityLog: human-readable description including role and name
-         * so the activity feed clearly shows "Admin John logged in" etc.
-         */
+
         $activity = new ActivityLog();
         $activity->user     = $userId ? $this->em->getReference(User::class, (int)$userId) : null;
         $activity->activity = $this->buildActivityDescription($event, $data, $role);
