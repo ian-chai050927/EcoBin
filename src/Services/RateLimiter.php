@@ -33,13 +33,15 @@ class RateLimiter
     {
         $conn = $this->em->getConnection();
         
-        // Count activities in the timeframe
-        $sql = "SELECT COUNT(*) FROM activity_logs WHERE user_id = :user_id AND activity = :activity AND created_at >= DATE_SUB(NOW(), INTERVAL :seconds SECOND)";
+        $cutoff = (new \DateTime("-{$timeframeSeconds} seconds"))->format('Y-m-d H:i:s');
+        
+        // Count activities in the sliding timeframe using consistent application timezone
+        $sql = "SELECT COUNT(*) FROM activity_logs WHERE user_id = :user_id AND activity = :activity AND created_at >= :cutoff";
         $stmt = $conn->prepare($sql);
         $result = $stmt->executeQuery([
             'user_id'  => $userId,
             'activity' => $action,
-            'seconds'  => $timeframeSeconds
+            'cutoff'   => $cutoff
         ]);
         
         $count = (int)$result->fetchOne();
