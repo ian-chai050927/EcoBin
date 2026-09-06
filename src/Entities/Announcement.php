@@ -1,8 +1,7 @@
 <?php
-/*
- * @author EcoBin Team — Module 5 (Notifications & System)
- * Entity mapped to announcements table via Doctrine ORM.
- * The author relationship uses ManyToOne to User.
+/**
+ * Module 5 :Notification & System Administration
+ * @author Tang Yik Hong
  */
 
 namespace EcoBin\Entities;

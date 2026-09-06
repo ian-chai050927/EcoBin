@@ -1,8 +1,7 @@
 <?php
-/*
- * @author EcoBin Team — Module 5 (Notifications & System)
- * Entity mapped to notifications table via Doctrine ORM.
- * The user relationship uses ManyToOne to User.
+/**
+ * Module 5 :Notification & System Administration
+ * @author Tang Yik Hong
  */
 
 namespace EcoBin\Entities;

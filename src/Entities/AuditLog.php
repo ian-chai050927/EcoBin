@@ -1,8 +1,7 @@
 <?php
-/*
- * @author EcoBin Team — Module 5 (Notifications & System)
- * Entity mapped to audit_logs table via Doctrine ORM.
- * Nullable ManyToOne association to User (can be CLI/system).
+/**
+ * Module 5 :Notification & System Administration
+ * @author Tang Yik Hong
  */
 
 namespace EcoBin\Entities;

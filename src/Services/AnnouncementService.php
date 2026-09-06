@@ -1,8 +1,7 @@
 <?php
-/*
- * @author EcoBin Team — Module 5 (Notifications & System)
- * Service for managing Announcement records.
- * Uses the ORM $author association instead of a raw createdBy integer.
+/**
+ * Module 5 :Notification & System Administration
+ * @author Tang Yik Hong
  */
 
 namespace EcoBin\Services;

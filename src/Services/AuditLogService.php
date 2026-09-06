@@ -1,6 +1,9 @@
 <?php
 namespace EcoBin\Services;
-
+/**
+ * Module 5 :Notification & System Administration
+ * @author Tang Yik Hong
+ */
 use Doctrine\ORM\EntityManagerInterface;
 use EcoBin\Entities\AuditLog;
 use EcoBin\Entities\ActivityLog;

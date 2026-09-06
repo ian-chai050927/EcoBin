@@ -1,9 +1,7 @@
 <?php
-/*
- * @author EcoBin Team — Module 5 (Notifications & System)
- * Observer that creates in-app Notification records for relevant events.
- * Uses $em->getReference() to assign the ORM User association without
- * issuing an extra SELECT query.
+/**
+ * Module 5 :Notification & System Administration
+ * @author Tang Yik Hong
  */
 
 namespace EcoBin\Observers;

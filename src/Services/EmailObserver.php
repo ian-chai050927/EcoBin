@@ -1,5 +1,8 @@
 <?php
-
+/**
+ * Module 5 :Notification & System Administration
+ * @author Tang Yik Hong
+ */
 namespace EcoBin\Observers;
 
 use Doctrine\ORM\EntityManagerInterface;
@@ -9,10 +12,7 @@ use EcoBin\Services\Mailer;
 
 class EmailObserver implements EventObserver
 {
-    /**
-     * Only these events trigger an email. Keeps this observer focused —
-     * not every system event needs to reach a resident's inbox.
-     */
+
     private const EMAILABLE_EVENTS = [
         'collection.assigned',
         'collection.completed',

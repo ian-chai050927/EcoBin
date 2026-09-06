@@ -1,4 +1,8 @@
 <?php
+/**
+ * Module 5 :Notification & System Administration
+ * @author Tang Yik Hong
+ */
 namespace EcoBin\Entities;
 
 use Doctrine\ORM\Mapping as ORM;

@@ -1,9 +1,7 @@
 <?php
-/*
- * @author EcoBin Team — Module 5 (Notifications & System)
- * Observer that writes AuditLog and ActivityLog records on every system event.
- * Uses $em->getReference() to assign the ORM User association without
- * issuing extra SELECT queries.
+/**
+ * Module 5 :Notification & System Administration
+ * @author Tang Yik Hong
  */
 
 namespace EcoBin\Observers;

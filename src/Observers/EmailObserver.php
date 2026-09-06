@@ -1,6 +1,9 @@
 <?php
 namespace EcoBin\Observers;
-
+/**
+ * Module 5 :Notification & System Administration
+ * @author Tang Yik Hong
+ */
 use Doctrine\ORM\EntityManagerInterface;
 use EcoBin\Contracts\EventObserver;
 use EcoBin\Entities\User;
