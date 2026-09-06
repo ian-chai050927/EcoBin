@@ -56,9 +56,31 @@ class WasteController
             exit('Invalid report data.');
         }
 
-        $uploader   = new SecureImageUploader();
-        $imagePaths = $uploader->uploadMultiple($_FILES['waste_images'] ?? [], 'waste', 5);
-        $imagePath  = $imagePaths[0] ?? null;
+        /*
+         * Secure image upload.
+         * Any upload validation error is converted into a user-friendly
+         * flash message instead of exposing a PHP stack trace.
+         */
+        try {
+            $uploader = new SecureImageUploader();
+
+            $imagePaths = $uploader->uploadMultiple(
+                $_FILES['waste_images'] ?? [],
+                'waste',
+                5
+            );
+
+            $imagePath = $imagePaths[0] ?? null;
+
+        } catch (\RuntimeException $e) {
+            Security::flash(
+                'error',
+                $e->getMessage()
+            );
+
+            header('Location: index.php?page=module2');
+            exit;
+        }
 
 
         $currentUser = $this->em->getReference(User::class, (int)$_SESSION['user_id']);
