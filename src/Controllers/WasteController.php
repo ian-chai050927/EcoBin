@@ -289,16 +289,45 @@ class WasteController
             ['email' => $staff->email]
         );
 
-        if (($statusResponse['status'] ?? null) === 'ERROR') {
+        /*
+         * Module 1 returns the service result inside the top-level "data" field.
+         * Stop the assignment if the account cannot be verified successfully.
+         */
+        if (($statusResponse['status'] ?? '') !== 'SUCCESS') {
             error_log(
                 'Module 1 user-status service unavailable during assignment: '
                 . ($statusResponse['error'] ?? 'unknown error')
             );
-        } elseif (
-            isset($statusResponse['userDetails']['status'])
-            && $statusResponse['userDetails']['status'] !== 'Active'
+
+            Security::flash(
+                'error',
+                'Unable to verify the selected collection staff account. Please try again.'
+            );
+            header('Location: index.php?page=module2-admin');
+            exit;
+        }
+
+        $statusData = $statusResponse['data'] ?? [];
+
+        if (($statusData['found'] ?? false) !== true) {
+            Security::flash(
+                'error',
+                'Selected collection staff account could not be verified.'
+            );
+            header('Location: index.php?page=module2-admin');
+            exit;
+        }
+
+        $userDetails = $statusData['userDetails'] ?? [];
+
+        if (
+            ($userDetails['role'] ?? '') !== 'Collection Staff'
+            || ($userDetails['status'] ?? '') !== 'Active'
         ) {
-            Security::flash('error', 'Selected collection staff account is no longer active (verified via Module 1 service).');
+            Security::flash(
+                'error',
+                'Selected collection staff account is no longer eligible for assignment (verified via Module 1 service).'
+            );
             header('Location: index.php?page=module2-admin');
             exit;
         }

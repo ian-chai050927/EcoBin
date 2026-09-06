@@ -5,6 +5,10 @@ use EcoBin\Services\Security;
 $role = $_SESSION['role'] ?? null;
 $currentPage = $_GET['page'] ?? 'home';
 
+$authPages = ['login', 'register', 'forgot', 'reset', 'verify'];
+$useAppLayout = !empty($_SESSION['user_id'])
+    && !in_array($currentPage, $authPages, true);
+
 function navActive(string $page): string
 {
     global $currentPage;
@@ -30,7 +34,7 @@ function navActive(string $page): string
 </head>
 <body>
 
-<?php if (!empty($_SESSION['user_id'])): ?>
+<?php if ($useAppLayout): ?>
 
     <!-- SIDEBAR -->
     <aside class="eco-sidebar">

@@ -214,21 +214,32 @@ class AuthController
                     <p style="color:#aaa;font-size:12px;text-align:center;">EcoBin &mdash; Waste Collection &amp; Recycling Management</p>
                 </div>';
 
-            // Send reset email via Mailer service (primary)
-            // Falls back gracefully — on local XAMPP, mail goes to storage/mail.log
-            $mailer = new Mailer($this->app['mail'] ?? []);
-            $mailer->send($user->email, 'EcoBin — Reset Your Password', $html);
-
-            // Also notify via Module 5 web service (best-effort, non-blocking)
+            // Send the reset email through Module 5's notification.email web service.
+            // If the service fails or does not confirm delivery, fall back to the local Mailer.
             try {
                 $client = new InternalApiClient($this->app['base_url'], $this->app['service_token']);
-                $client->call('notification.email', [
+
+                $response = $client->call('notification.email', [
                     'email'   => $user->email,
                     'subject' => 'EcoBin Reset Your Password',
                     'message' => $html,
                 ]);
+
+                $delivered = ($response['status'] ?? '') === 'SUCCESS'
+                    && ($response['data']['delivered'] ?? false) === true;
+
+                if (!$delivered) {
+                    $reason = $response['error'] ?? 'Email delivery was not confirmed.';
+                    error_log('notification.email failed during password reset: ' . $reason);
+
+                    $mailer = new Mailer($this->app['mail'] ?? []);
+                    $mailer->send($user->email, 'EcoBin — Reset Your Password', $html);
+                }
             } catch (\Throwable $e) {
                 error_log('notification.email service unavailable during password reset: ' . $e->getMessage());
+
+                $mailer = new Mailer($this->app['mail'] ?? []);
+                $mailer->send($user->email, 'EcoBin — Reset Your Password', $html);
             }
 
             $this->dispatcher->dispatch('auth.password_reset_requested', [

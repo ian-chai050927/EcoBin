@@ -28,20 +28,101 @@ class NotificationObserver implements EventObserver
             'appointment.reminder'   => ['Appointment Reminder', 'Your recycling appointment is coming up soon.', 'Reminder'],
         ];
 
-        if (!isset($map[$event]) || empty($data['user_id'])) return;
-
-        [$title, $message, $type] = $map[$event];
-        $n = new Notification();
+        // Notify the resident / primary user (existing behaviour)
+        if (isset($map[$event]) && !empty($data['user_id'])) {
+            [$title, $message, $type] = $map[$event];
+            $this->persistNotification(
+                (int)$data['user_id'],
+                $title,
+                $data['message'] ?? $message,
+                $type
+            );
+        }
 
         /*
-         * ORM RELATIONSHIP USAGE:
-         * Instead of writing $n->userId = 123 (raw FK integer), we assign a
-         * Doctrine proxy object via getReference(). Doctrine resolves the FK
-         * column automatically when persisting — no extra SELECT is executed.
+         * STAFF NOTIFICATION (Module 5 only — no other module touched):
+         * When a collection is assigned, look up the CollectionRequest by entity_id
+         * and traverse the ORM association to find the assigned collector,
+         * then notify them directly.
          */
-        $n->user    = $this->em->getReference(User::class, (int)$data['user_id']);
+        if ($event === 'collection.assigned' && !empty($data['entity_id'])) {
+            $collection = $this->em->find(
+                \EcoBin\Entities\CollectionRequest::class,
+                (int)$data['entity_id']
+            );
+            if ($collection && $collection->collectionStaff) {
+                $this->persistNotification(
+                    $collection->collectionStaff->id,
+                    'New Collection Assigned',
+                    'You have been assigned to a waste collection scheduled for '
+                        . ($collection->scheduledDate?->format('d M Y') ?? 'TBC') . '.',
+                    'Collection'
+                );
+            }
+        }
+
+        /*
+         * OPERATOR NOTIFICATION — New Recycling Submission:
+         * When a resident submits a recycling drop-off, look up the submission
+         * by entity_id, traverse center->operator ORM association, and notify
+         * the operator that a new submission awaits their review.
+         */
+        if ($event === 'recycling.submitted' && !empty($data['entity_id'])) {
+            $submission = $this->em->find(
+                \EcoBin\Entities\RecyclingSubmission::class,
+                (int)$data['entity_id']
+            );
+            if ($submission && $submission->center && $submission->center->operator) {
+                $this->persistNotification(
+                    $submission->center->operator->id,
+                    'New Recycling Submission',
+                    'A new recycling submission (' . $submission->material . ', '
+                        . $submission->weightKg . ' kg) has been submitted to '
+                        . $submission->center->name . ' and is awaiting your review.',
+                    'Recycling'
+                );
+            }
+        }
+
+        /*
+         * OPERATOR NOTIFICATION — New Appointment Booked:
+         * When a resident books a recycling appointment, look up the appointment
+         * by entity_id, traverse center->operator ORM association, and notify
+         * the operator of the incoming drop-off booking.
+         */
+        if ($event === 'recycling.appointment_created' && !empty($data['entity_id'])) {
+            $appointment = $this->em->find(
+                \EcoBin\Entities\RecyclingAppointment::class,
+                (int)$data['entity_id']
+            );
+            if ($appointment && $appointment->center && $appointment->center->operator) {
+                $this->persistNotification(
+                    $appointment->center->operator->id,
+                    'New Drop-Off Appointment',
+                    'A new recycling appointment has been booked at '
+                        . $appointment->center->name . ' for '
+                        . $appointment->appointmentAt->format('d M Y, H:i') . '.',
+                    'Recycling'
+                );
+            }
+        }
+    }
+
+    /**
+     * Persists a single Notification entity for the given user.
+     * Using getReference() avoids an extra SELECT — Doctrine writes
+     * the user_id FK column automatically on flush.
+     */
+    private function persistNotification(
+        int    $userId,
+        string $title,
+        string $message,
+        string $type
+    ): void {
+        $n          = new Notification();
+        $n->user    = $this->em->getReference(User::class, $userId);
         $n->title   = $title;
-        $n->message = $data['message'] ?? $message;
+        $n->message = $message;
         $n->type    = $type;
 
         $this->em->persist($n);
