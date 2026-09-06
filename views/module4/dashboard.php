@@ -1,3 +1,9 @@
+<?php
+/**
+ * Module 4: Dashboard & Reporting Management
+ * @author Low Chun Wei
+ */
+?>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <div class="d-flex justify-content-between align-items-center flex-wrap gap-3 mb-4">

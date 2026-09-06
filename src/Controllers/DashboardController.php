@@ -1,4 +1,8 @@
 <?php
+/**
+ * Module 4: Dashboard & Reporting Management
+ * @author Low Chun Wei
+ */
 namespace EcoBin\Controllers;
 
 use Doctrine\ORM\EntityManagerInterface;
