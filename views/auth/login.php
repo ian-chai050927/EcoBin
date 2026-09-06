@@ -57,9 +57,6 @@
                 </p>
             </div>
 
-            <div class="auth-note">
-                Demo password for seeded accounts: <strong>Password123!</strong>
-            </div>
 
         </div>
     </div>
