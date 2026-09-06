@@ -1,3 +1,9 @@
+<?php
+/**
+ * Module 4: Dashboard & Reporting Management
+ * @author Low Chun Wei
+ */
+?>
 <style>
     @media print {
         @page {
