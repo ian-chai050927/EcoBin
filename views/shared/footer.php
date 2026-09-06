@@ -1,6 +1,11 @@
-<?php $loggedIn = !empty($_SESSION['user_id']); ?>
+<?php
+$currentPage = $_GET['page'] ?? 'home';
+$authPages = ['login', 'register', 'forgot', 'reset', 'verify'];
+$useAppLayout = !empty($_SESSION['user_id'])
+    && !in_array($currentPage, $authPages, true);
+?>
 
-<?php if ($loggedIn): ?>
+<?php if ($useAppLayout): ?>
 
     </div>
 
